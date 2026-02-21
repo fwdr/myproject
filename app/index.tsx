@@ -2,9 +2,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { useGame } from '@/context/GameContext';
+import { useGame } from '../context/GameContext';
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== 'web') {
+  SplashScreen.preventAutoHideAsync();
+}
 
 const SPLASH_DURATION_MS = 2000;
 
@@ -17,7 +19,7 @@ export default function SplashScreenPage() {
     if (isLoading) return;
 
     const goHome = () => {
-      SplashScreen.hideAsync();
+      if (Platform.OS !== 'web') SplashScreen.hideAsync();
       router.replace('/home');
     };
 

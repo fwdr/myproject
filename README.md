@@ -22,11 +22,11 @@ A simple cross-platform (iOS & Android) mobile game shell built with **Expo** an
 npm install
 ```
 
-## Run
+## Run (no Xcode or Android SDK required)
 
-- **iOS:** `npm run ios`
-- **Android:** `npm run android`
-- **Dev server (choose device in terminal):** `npm start`
+- **Phone:** Run `npm start`, then scan the QR code with **Expo Go** ([iOS](https://apps.apple.com/app/expo-go/id982107779) \| [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)). Use the same Wi‑Fi as your computer.
+- **Browser:** Run `npm start` and press **`w`**, or run `npm run web`.
+- **Simulators (optional):** If you have Xcode/Android SDK: `npm run ios` or `npm run android`.
 
 ## Project layout
 

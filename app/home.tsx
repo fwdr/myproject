@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useGame } from '@/context/GameContext';
+import { useGame } from '../context/GameContext';
 
 export default function HomeScreen() {
   const router = useRouter();
