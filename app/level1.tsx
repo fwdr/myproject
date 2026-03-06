@@ -57,11 +57,11 @@ export default function Level1Screen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
+        style={styles.closeButton}
+        onPress={() => handleEndGame(0)}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
-        <Text style={styles.backLabel}>← Back</Text>
+        <Text style={styles.closeIcon}>✕</Text>
       </TouchableOpacity>
 
       <View style={[styles.gameArea, { width: dimensions.width, height: dimensions.height }]}>
@@ -89,14 +89,6 @@ export default function Level1Screen() {
           />
         )}
       </View>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => handleEndGame(100)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.buttonText}>End game (score: 100)</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -107,16 +99,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a2e',
     paddingTop: 50,
   },
-  backButton: {
+  closeButton: {
     position: 'absolute',
     top: 50,
-    left: 24,
+    right: 24,
     zIndex: 10,
+    padding: 4,
   },
-  backLabel: {
-    fontSize: 17,
-    color: '#4ade80',
-    fontWeight: '600',
+  closeIcon: {
+    fontSize: 24,
+    color: '#888',
+    fontWeight: '300',
   },
   gameArea: {
     position: 'absolute',
@@ -140,19 +133,5 @@ const styles = StyleSheet.create({
     height: MISSILE_SIZE,
     borderRadius: MISSILE_SIZE / 2,
     backgroundColor: '#fbbf24',
-  },
-  button: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(74, 222, 128, 0.2)',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#4ade80',
-    fontWeight: '600',
   },
 });
