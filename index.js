@@ -6,9 +6,8 @@ import { renderRootComponent } from 'expo-router/build/renderRootComponent';
 import { Head } from 'expo-router/build/head';
 import 'expo-router/build/fast-refresh';
 
-// Match route files under ./app (exclude +api and +(html|native-intent))
-const routeRegex = /^\.\/(?!.*(\+api|\+(html|native-intent))).*\.(tsx?|jsx?)$/;
-const ctx = require.context('./app', true, routeRegex);
+// Literal regex required by Metro for require.context (matches route files under ./app)
+const ctx = require.context('./app', true, /^\.\/(?!.*(\+api|\+(html|native-intent))).*\.(tsx?|jsx?)$/);
 
 function App() {
   return (
