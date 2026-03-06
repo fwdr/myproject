@@ -39,6 +39,7 @@ const GUN_SPEED = 3; // steady speed, slower than missiles
 const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
+const MENU_BAR_HEIGHT = 48;
 let missileId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
@@ -85,23 +86,27 @@ export default function Level1Screen() {
   const { setHighScore } = useGame();
 
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
+  const playAreaHeight = dimensions.height - MENU_BAR_HEIGHT;
+  const innerWidth = dimensions.width - 2 * BRICK_W;
+  const innerHeight = playAreaHeight - 2 * BRICK_H;
   const [gun, setGun] = useState<Gun | null>(null);
   const [missiles, setMissiles] = useState<Missile[]>([]);
   const gunRef = useRef<Gun | null>(null);
   const missilesRef = useRef<Missile[]>([]);
-  const dimensionsRef = useRef(dimensions);
-  dimensionsRef.current = dimensions;
+  const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
+  dimensionsRef.current = { width: innerWidth, height: innerHeight };
 
   useEffect(() => {
-    const { width, height } = dimensions;
-    const padding = BRICK_W + GUN_SIZE + 20;
-    const x = padding + Math.random() * (width - padding * 2);
-    const y = padding + 100 + Math.random() * (height - 200 - padding * 2);
+    const w = innerWidth;
+    const h = innerHeight;
+    const padding = GUN_SIZE + 10;
+    const x = padding + Math.random() * (w - padding * 2);
+    const y = padding + Math.random() * (h - padding * 2);
     const rotation = Math.floor(Math.random() * 360);
     const g: Gun = { x, y, rotation, vx: 0, vy: 0 };
     setGun(g);
     gunRef.current = g;
-  }, []);
+  }, [innerWidth, innerHeight]);
 
   const gameAreaRef = useRef<View>(null);
   const [gameAreaLayout, setGameAreaLayout] = useState({ x: 0, y: 0 });
@@ -159,7 +164,7 @@ export default function Level1Screen() {
         const vy = g.vy || 0;
         let x = g.x + vx;
         let y = g.y + vy;
-        const pad = BRICK_W + GUN_SIZE / 2;
+        const pad = GUN_SIZE / 2;
         x = Math.max(pad, Math.min(width - pad, x));
         y = Math.max(pad, Math.min(height - pad, y));
         const next: Gun = { ...g, x, y };
@@ -193,52 +198,56 @@ export default function Level1Screen() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={() => handleEndGame(0)}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Text style={styles.closeIcon}>✕</Text>
-      </TouchableOpacity>
+      <View style={styles.menuBar}>
+        <TouchableOpacity
+          onPress={() => handleEndGame(0)}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          style={styles.closeButton}
+        >
+          <Text style={styles.closeIcon}>✕</Text>
+        </TouchableOpacity>
+      </View>
 
-      <Pressable
-        ref={gameAreaRef}
-        style={[
-          styles.gameArea,
-          { width: dimensions.width, height: dimensions.height },
-        ]}
-        onPress={handleTap}
-        onLayout={(e) => {
-          const { layout } = e.nativeEvent;
-          setGameAreaLayout({ x: layout.x, y: layout.y });
-        }}
-      >
-        {gun && (
-          <View
-            style={[
-              styles.gun,
-              {
-                left: gun.x - GUN_SIZE / 2,
-                top: gun.y - GUN_SIZE / 2,
-                transform: [{ rotate: `${gun.rotation}deg` }],
-              },
-            ]}
-          />
-        )}
-        <BrickWall width={dimensions.width} height={dimensions.height} />
-        {missiles.map((m) => (
-          <View
-            key={m.id}
-            style={[
-              styles.missile,
-              {
-                left: m.x - MISSILE_SIZE / 2,
-                top: m.y - MISSILE_SIZE / 2,
-              },
-            ]}
-          />
-        ))}
-      </Pressable>
+      <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
+        <BrickWall width={dimensions.width} height={playAreaHeight} />
+        <Pressable
+          ref={gameAreaRef}
+          style={[
+            styles.playArea,
+            { width: innerWidth, height: innerHeight },
+          ]}
+          onPress={handleTap}
+          onLayout={(e) => {
+            const { layout } = e.nativeEvent;
+            setGameAreaLayout({ x: layout.x, y: layout.y });
+          }}
+        >
+          {gun && (
+            <View
+              style={[
+                styles.gun,
+                {
+                  left: gun.x - GUN_SIZE / 2,
+                  top: gun.y - GUN_SIZE / 2,
+                  transform: [{ rotate: `${gun.rotation}deg` }],
+                },
+              ]}
+            />
+          )}
+          {missiles.map((m) => (
+            <View
+              key={m.id}
+              style={[
+                styles.missile,
+                {
+                  left: m.x - MISSILE_SIZE / 2,
+                  top: m.y - MISSILE_SIZE / 2,
+                },
+              ]}
+            />
+          ))}
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -247,13 +256,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: PALETTE.navy,
-    paddingTop: 50,
+  },
+  menuBar: {
+    height: MENU_BAR_HEIGHT,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: PALETTE.navy,
+    borderBottomWidth: 1,
+    borderBottomColor: PALETTE.gray,
   },
   closeButton: {
-    position: 'absolute',
-    top: 50,
-    left: 24,
-    zIndex: 10,
     padding: 4,
   },
   closeIcon: {
@@ -261,10 +274,14 @@ const styles = StyleSheet.create({
     color: PALETTE.silver,
     fontWeight: '300',
   },
-  gameArea: {
+  playAreaWrapper: {
+    flex: 1,
+    width: '100%',
+  },
+  playArea: {
     position: 'absolute',
-    top: 0,
-    left: 0,
+    left: BRICK_W,
+    top: BRICK_H,
   },
   brick: {
     width: BRICK_W - MORTAR,
