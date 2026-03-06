@@ -315,22 +315,65 @@ export default function Level1Screen() {
     return () => cancelAnimationFrame(rafId);
   }, [gameActive, fontsLoaded, hitTest]);
 
-  const handleEndGame = (score: number) => {
-    setHighScore((prev) => Math.max(prev, score));
+  const handleEndGame = (finalScore: number) => {
+    setHighScore((prev) => Math.max(prev, finalScore));
     router.replace('/home');
   };
+
+  if (!fontsLoaded) return null;
 
   return (
     <View style={styles.container}>
       <View style={styles.menuBar}>
         <TouchableOpacity
-          onPress={() => handleEndGame(0)}
+          onPress={() => handleEndGame(score)}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.closeButton}
         >
-          <Text style={styles.closeIcon}>✕</Text>
+          <Text style={[styles.closeIcon, { fontFamily: 'PressStart2P_400Regular' }]}>✕</Text>
         </TouchableOpacity>
+        <Text
+          style={[
+            styles.scoreText,
+            { fontFamily: 'PressStart2P_400Regular' },
+          ]}
+        >
+          {String(score).padStart(5, '0')}
+        </Text>
+        <View style={styles.livesRow}>
+          {Array.from({ length: INITIAL_LIVES }).map((_, i) => (
+            <Text
+              key={i}
+              style={[
+                styles.lifeIcon,
+                i >= lives && styles.lifeLost,
+                { fontFamily: 'PressStart2P_400Regular' },
+              ]}
+            >
+              ●
+            </Text>
+          ))}
+        </View>
       </View>
+
+      {!gameActive && (
+        <View style={styles.gameOverOverlay}>
+          <Text style={[styles.gameOverText, { fontFamily: 'PressStart2P_400Regular' }]}>
+            GAME OVER
+          </Text>
+          <Text style={[styles.gameOverScore, { fontFamily: 'PressStart2P_400Regular' }]}>
+            {String(score).padStart(5, '0')}
+          </Text>
+          <TouchableOpacity
+            style={styles.gameOverButton}
+            onPress={() => handleEndGame(score)}
+          >
+            <Text style={[styles.gameOverButtonText, fontsLoaded && { fontFamily: 'PressStart2P_400Regular' }]}>
+              EXIT
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
         <BrickWall
@@ -362,6 +405,18 @@ export default function Level1Screen() {
               ]}
             />
           )}
+          {obstacles.map((o) => (
+            <View
+              key={o.id}
+              style={[
+                styles.obstacle,
+                {
+                  left: o.x - OBSTACLE_SIZE / 2,
+                  top: o.y - OBSTACLE_SIZE / 2,
+                },
+              ]}
+            />
+          ))}
           {missiles.map((m) => (
             <View
               key={m.id}
@@ -389,18 +444,65 @@ const styles = StyleSheet.create({
     height: MENU_BAR_HEIGHT,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     backgroundColor: PALETTE.navy,
-    borderBottomWidth: 1,
-    borderBottomColor: PALETTE.gray,
+    borderBottomWidth: 2,
+    borderBottomColor: PALETTE.cyan,
   },
   closeButton: {
     padding: 4,
   },
   closeIcon: {
-    fontSize: 24,
-    color: PALETTE.silver,
-    fontWeight: '300',
+    fontSize: 16,
+    color: PALETTE.yellow,
+    letterSpacing: 1,
+  },
+  scoreText: {
+    fontSize: 14,
+    color: PALETTE.yellow,
+    letterSpacing: 2,
+  },
+  livesRow: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  lifeIcon: {
+    fontSize: 12,
+    color: PALETTE.lime,
+  },
+  lifeLost: {
+    color: PALETTE.maroon,
+  },
+  gameOverOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  gameOverText: {
+    fontSize: 20,
+    color: PALETTE.red,
+    marginBottom: 16,
+    letterSpacing: 2,
+  },
+  gameOverScore: {
+    fontSize: 18,
+    color: PALETTE.yellow,
+    marginBottom: 24,
+    letterSpacing: 2,
+  },
+  gameOverButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderWidth: 2,
+    borderColor: PALETTE.cyan,
+  },
+  gameOverButtonText: {
+    fontSize: 12,
+    color: PALETTE.cyan,
+    letterSpacing: 1,
   },
   playAreaWrapper: {
     flex: 1,
@@ -468,5 +570,13 @@ const styles = StyleSheet.create({
     height: MISSILE_SIZE,
     borderRadius: MISSILE_SIZE / 2,
     backgroundColor: PALETTE.yellow,
+  },
+  obstacle: {
+    position: 'absolute',
+    width: OBSTACLE_SIZE,
+    height: OBSTACLE_SIZE,
+    backgroundColor: PALETTE.magenta,
+    borderWidth: 2,
+    borderColor: PALETTE.white,
   },
 });
