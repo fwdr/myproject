@@ -44,51 +44,37 @@ let missileId = 0;
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 
-function BrickWall({
-  width,
-  height,
-}: {
-  width: number;
-  height: number;
-}) {
-  const topBricks = Math.ceil(width / BRICK_W) + 1;
-  const sideBricks = Math.ceil((height - BRICK_H * 2) / BRICK_H);
-  const brickStyle = {
-    width: BRICK_W - MORTAR,
-    height: BRICK_H - MORTAR,
-    backgroundColor: PALETTE.red,
-    marginRight: MORTAR,
-    marginBottom: MORTAR,
-    borderWidth: 0,
-  };
+function BrickWall({ width, height }: { width: number; height: number }) {
+  const topN = Math.ceil(width / (BRICK_W / 2)) + 2;
+  const sideN = Math.ceil((height - BRICK_H * 2) / BRICK_H);
+
+  const brick = (key: string, offset?: number) => (
+    <View
+      key={key}
+      style={[
+        styles.brick,
+        offset !== undefined && { marginLeft: offset },
+      ]}
+    />
+  );
 
   return (
     <>
-      <View style={[styles.brickRow, styles.brickTop, { width }]}>
-        {Array.from({ length: topBricks }).map((_, i) => (
-          <View
-            key={`t-${i}`}
-            style={[brickStyle, i % 2 === 1 && { marginLeft: BRICK_W / 2 }]}
-          />
-        ))}
+      <View style={[styles.brickStrip, styles.brickTop, { width }]}>
+        {Array.from({ length: topN }).map((_, i) =>
+          brick(`t-${i}`, i % 2 === 1 ? BRICK_W / 2 : 0)
+        )}
       </View>
-      <View style={[styles.brickRow, styles.brickBottom, { width }]}>
-        {Array.from({ length: topBricks }).map((_, i) => (
-          <View
-            key={`b-${i}`}
-            style={[brickStyle, i % 2 === 0 && { marginLeft: BRICK_W / 2 }]}
-          />
-        ))}
+      <View style={[styles.brickStrip, styles.brickBottom, { width }]}>
+        {Array.from({ length: topN }).map((_, i) =>
+          brick(`b-${i}`, i % 2 === 0 ? BRICK_W / 2 : 0)
+        )}
       </View>
-      <View style={[styles.brickCol, styles.brickLeft, { height: height - BRICK_H * 2 }]}>
-        {Array.from({ length: sideBricks }).map((_, i) => (
-          <View key={`l-${i}`} style={[brickStyle, { marginRight: 0 }]} />
-        ))}
+      <View style={[styles.brickStripCol, styles.brickLeft, { height: height - BRICK_H * 2 }]}>
+        {Array.from({ length: sideN }).map((_, i) => brick(`l-${i}`))}
       </View>
-      <View style={[styles.brickCol, styles.brickRight, { height: height - BRICK_H * 2 }]}>
-        {Array.from({ length: sideBricks }).map((_, i) => (
-          <View key={`r-${i}`} style={[brickStyle, { marginRight: 0 }]} />
-        ))}
+      <View style={[styles.brickStripCol, styles.brickRight, { height: height - BRICK_H * 2 }]}>
+        {Array.from({ length: sideN }).map((_, i) => brick(`r-${i}`))}
       </View>
     </>
   );
@@ -280,13 +266,22 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
-  brickRow: {
+  brick: {
+    width: BRICK_W - MORTAR,
+    height: BRICK_H - MORTAR,
+    backgroundColor: PALETTE.red,
+    borderWidth: 1,
+    borderColor: PALETTE.maroon,
+    marginRight: MORTAR,
+    marginBottom: MORTAR,
+  },
+  brickStrip: {
     position: 'absolute',
     left: 0,
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  brickCol: {
+  brickStripCol: {
     position: 'absolute',
     top: BRICK_H,
     flexDirection: 'column',
