@@ -262,56 +262,51 @@ export default function Level1Screen() {
           if (o.health <= 0) continue;
           if (hitTest(x, y, GUN_RADIUS, o.x, o.y, OBSTACLE_RADIUS)) {
             setLives((l) => {
-              const next = l - 1;
-              if (next <= 0) setGameActive(false);
-              return next;
+              const newLives = Math.max(0, l - 1);
+              if (newLives <= 0) setGameActive(false);
+              return newLives;
             });
             setGun(null);
             gunRef.current = null;
-            const padding = GUN_SIZE + 10;
-            const nx = padding + Math.random() * (width - padding * 2);
-            const ny = padding + Math.random() * (height - padding * 2);
-            setTimeout(() => {
-              const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
-              gunRef.current = ng;
-              setGun(ng);
-            }, 500);
+            setLives((l) => {
+              const padding = GUN_SIZE + 10;
+              const nx = padding + Math.random() * (width - padding * 2);
+              const ny = padding + Math.random() * (height - padding * 2);
+              setTimeout(() => {
+                const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
+                gunRef.current = ng;
+                setGun(ng);
+              }, 500);
+              }
+              return l;
+            });
             break;
           }
         }
       }
 
+      let obsNext = [...obstaclesRef.current];
+      let scoreDelta = 0;
       setMissiles((prev) => {
         if (prev.length === 0) return prev;
-        const moved = prev.map((m) => ({
-          ...m,
-          x: m.x + m.dx,
-          y: m.y + m.dy,
-        }));
-        const obsCopy = [...obstaclesRef.current];
-        let scoreAdd = 0;
-        const filtered = moved.filter((m) => {
-          for (let i = 0; i < obsCopy.length; i++) {
-            const o = obsCopy[i];
+        const moved = prev.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
+        const survivors = moved.filter((m) => {
+          for (let i = 0; i < obsNext.length; i++) {
+            const o = obsNext[i];
             if (o.health <= 0) continue;
             if (hitTest(m.x, m.y, MISSILE_SIZE / 2, o.x, o.y, OBSTACLE_RADIUS)) {
-              obsCopy[i] = { ...o, health: o.health - 1 };
-              if (obsCopy[i].health <= 0) scoreAdd += OBSTACLE_POINTS;
-              setObstacles(obsCopy.filter((x) => x.health > 0).length ? obsCopy : obsCopy.map((x) => ({ ...x, health: Math.max(0, x.health) })));
-              if (obsCopy[i].health <= 0) {
-                setObstacles((prev) => prev.filter((ob) => ob.id !== o.id || ob.health > 0));
-              } else {
-                setObstacles(obsCopy);
-              }
-              if (scoreAdd) setScore((s) => s + scoreAdd);
+              obsNext[i] = { ...o, health: o.health - 1 };
+              if (obsNext[i].health <= 0) scoreDelta += OBSTACLE_POINTS;
               return false;
             }
           }
           return m.x >= -20 && m.x <= width + 20 && m.y >= -20 && m.y <= height + 20;
         });
-        obstaclesRef.current = obsCopy;
-        missilesRef.current = filtered;
-        return filtered;
+        setObstacles(obsNext.filter((o) => o.health > 0));
+        obstaclesRef.current = obsNext.filter((o) => o.health > 0);
+        if (scoreDelta) setScore((s) => s + scoreDelta);
+        missilesRef.current = survivors;
+        return survivors;
       });
       rafId = requestAnimationFrame(tick);
     };
