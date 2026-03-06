@@ -35,13 +35,64 @@ const PALETTE = {
 const GUN_SIZE = 24;
 const MISSILE_SIZE = 4;
 const MISSILE_SPEED = 8;
-const MAX_GUN_SPEED = 14;
-const DEAD_ZONE = 12; // pixels from center - tap here to stop gun
-const GUN_SPEED_SCALE = 0.25; // speed = distance * scale, capped at max
+const GUN_SPEED = 3; // steady speed, slower than missiles
+const BRICK_W = 20;
+const BRICK_H = 10;
+const MORTAR = 1;
 let missileId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
+
+function BrickWall({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}) {
+  const topBricks = Math.ceil(width / BRICK_W) + 1;
+  const sideBricks = Math.ceil((height - BRICK_H * 2) / BRICK_H);
+  const brickStyle = {
+    width: BRICK_W - MORTAR,
+    height: BRICK_H - MORTAR,
+    backgroundColor: PALETTE.red,
+    marginRight: MORTAR,
+    marginBottom: MORTAR,
+    borderWidth: 0,
+  };
+
+  return (
+    <>
+      <View style={[styles.brickRow, styles.brickTop, { width }]}>
+        {Array.from({ length: topBricks }).map((_, i) => (
+          <View
+            key={`t-${i}`}
+            style={[brickStyle, i % 2 === 1 && { marginLeft: BRICK_W / 2 }]}
+          />
+        ))}
+      </View>
+      <View style={[styles.brickRow, styles.brickBottom, { width }]}>
+        {Array.from({ length: topBricks }).map((_, i) => (
+          <View
+            key={`b-${i}`}
+            style={[brickStyle, i % 2 === 0 && { marginLeft: BRICK_W / 2 }]}
+          />
+        ))}
+      </View>
+      <View style={[styles.brickCol, styles.brickLeft, { height: height - BRICK_H * 2 }]}>
+        {Array.from({ length: sideBricks }).map((_, i) => (
+          <View key={`l-${i}`} style={[brickStyle, { marginRight: 0 }]} />
+        ))}
+      </View>
+      <View style={[styles.brickCol, styles.brickRight, { height: height - BRICK_H * 2 }]}>
+        {Array.from({ length: sideBricks }).map((_, i) => (
+          <View key={`r-${i}`} style={[brickStyle, { marginRight: 0 }]} />
+        ))}
+      </View>
+    </>
+  );
+}
 
 export default function Level1Screen() {
   const router = useRouter();
@@ -57,7 +108,7 @@ export default function Level1Screen() {
 
   useEffect(() => {
     const { width, height } = dimensions;
-    const padding = GUN_SIZE + 20;
+    const padding = BRICK_W + GUN_SIZE + 20;
     const x = padding + Math.random() * (width - padding * 2);
     const y = padding + 100 + Math.random() * (height - 200 - padding * 2);
     const rotation = Math.floor(Math.random() * 360);
@@ -87,21 +138,12 @@ export default function Level1Screen() {
       const dx = tapX - g.x;
       const dy = tapY - g.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < 2) return; // ignore tap on gun center
 
-      let vx = 0;
-      let vy = 0;
-      let rotation = g.rotation;
-
-      if (distance < DEAD_ZONE) {
-        vx = 0;
-        vy = 0;
-      } else {
-        const speed = Math.min(distance * GUN_SPEED_SCALE, MAX_GUN_SPEED);
-        const invD = 1 / distance;
-        vx = speed * dx * invD;
-        vy = speed * dy * invD;
-        rotation = (Math.atan2(dx, -dy) * 180) / Math.PI;
-      }
+      const rotation = (Math.atan2(dx, -dy) * 180) / Math.PI;
+      const invD = 1 / distance;
+      const vx = GUN_SPEED * dx * invD;
+      const vy = GUN_SPEED * dy * invD;
 
       const next: Gun = { ...g, rotation, vx, vy };
       gunRef.current = next;
@@ -126,11 +168,14 @@ export default function Level1Screen() {
     const tick = () => {
       const { width, height } = dimensionsRef.current;
       const g = gunRef.current;
-      if (g && (g.vx !== 0 || g.vy !== 0)) {
-        let x = g.x + g.vx;
-        let y = g.y + g.vy;
-        x = Math.max(GUN_SIZE / 2, Math.min(width - GUN_SIZE / 2, x));
-        y = Math.max(GUN_SIZE / 2, Math.min(height - GUN_SIZE / 2, y));
+      if (g) {
+        const vx = g.vx || 0;
+        const vy = g.vy || 0;
+        let x = g.x + vx;
+        let y = g.y + vy;
+        const pad = BRICK_W + GUN_SIZE / 2;
+        x = Math.max(pad, Math.min(width - pad, x));
+        y = Math.max(pad, Math.min(height - pad, y));
         const next: Gun = { ...g, x, y };
         gunRef.current = next;
         setGun(next);
@@ -194,6 +239,7 @@ export default function Level1Screen() {
             ]}
           />
         )}
+        <BrickWall width={dimensions.width} height={dimensions.height} />
         {missiles.map((m) => (
           <View
             key={m.id}
@@ -234,6 +280,21 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
+  brickRow: {
+    position: 'absolute',
+    left: 0,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  brickCol: {
+    position: 'absolute',
+    top: BRICK_H,
+    flexDirection: 'column',
+  },
+  brickTop: { top: 0 },
+  brickBottom: { bottom: 0 },
+  brickLeft: { left: 0 },
+  brickRight: { right: 0 },
   gun: {
     position: 'absolute',
     width: GUN_SIZE,
