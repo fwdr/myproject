@@ -40,7 +40,7 @@ const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
 const MENU_BAR_HEIGHT = 48;
-const GAP_HEIGHT = GUN_SIZE + 12; // tunnel opening - just big enough for gun
+const GAP_HEIGHT = GUN_SIZE * 2; // tunnel opening - 2x gun size, centered halfway down
 let missileId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
@@ -50,8 +50,9 @@ function BrickWall({ width, height }: { width: number; height: number }) {
   const topN = Math.ceil(width / BRICK_W) + 2;
   const sideHeight = height - BRICK_H * 2;
   const sideN = Math.ceil(sideHeight / BRICK_H);
-  const gapTop = (sideHeight - GAP_HEIGHT) / 2;
-  const gapBottom = gapTop + GAP_HEIGHT;
+  const gapCenter = sideHeight / 2;
+  const gapTop = gapCenter - GAP_HEIGHT / 2;
+  const gapBottom = gapCenter + GAP_HEIGHT / 2;
   const inGap = (i: number) => {
     const brickTop = i * BRICK_H;
     const brickBottom = brickTop + (BRICK_H - MORTAR);
@@ -183,8 +184,9 @@ export default function Level1Screen() {
         let y = g.y + vy;
         let nextVx = vx;
         const pad = GUN_SIZE / 2;
-        const gapTop = (height - GAP_HEIGHT) / 2;
-        const gapBottom = gapTop + GAP_HEIGHT;
+        const gapCenter = height / 2;
+        const gapTop = gapCenter - GAP_HEIGHT / 2;
+        const gapBottom = gapCenter + GAP_HEIGHT / 2;
         const inGap = (gy: number) => gy >= gapTop && gy <= gapBottom;
 
         y = Math.max(pad, Math.min(height - pad, y));
