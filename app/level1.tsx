@@ -46,36 +46,40 @@ type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 
 function BrickWall({ width, height }: { width: number; height: number }) {
-  const topN = Math.ceil(width / (BRICK_W / 2)) + 2;
+  const topN = Math.ceil(width / BRICK_W) + 2;
   const sideN = Math.ceil((height - BRICK_H * 2) / BRICK_H);
 
-  const brick = (key: string, offset?: number) => (
+  const brickHoriz = (key: string, offset?: number) => (
     <View
       key={key}
       style={[
-        styles.brick,
+        styles.brickHorizontal,
         offset !== undefined && { marginLeft: offset },
       ]}
     />
+  );
+
+  const brickVert = (key: string) => (
+    <View key={key} style={styles.brick} />
   );
 
   return (
     <>
       <View style={[styles.brickStrip, styles.brickTop, { width }]}>
         {Array.from({ length: topN }).map((_, i) =>
-          brick(`t-${i}`, i % 2 === 1 ? BRICK_W / 2 : 0)
+          brickHoriz(`t-${i}`, i % 2 === 1 ? BRICK_W / 2 : 0)
         )}
       </View>
       <View style={[styles.brickStrip, styles.brickBottom, { width }]}>
         {Array.from({ length: topN }).map((_, i) =>
-          brick(`b-${i}`, i % 2 === 0 ? BRICK_W / 2 : 0)
+          brickHoriz(`b-${i}`, i % 2 === 0 ? BRICK_W / 2 : 0)
         )}
       </View>
       <View style={[styles.brickStripCol, styles.brickLeft, { height: height - BRICK_H * 2 }]}>
-        {Array.from({ length: sideN }).map((_, i) => brick(`l-${i}`))}
+        {Array.from({ length: sideN }).map((_, i) => brickVert(`l-${i}`))}
       </View>
       <View style={[styles.brickStripCol, styles.brickRight, { height: height - BRICK_H * 2 }]}>
-        {Array.from({ length: sideN }).map((_, i) => brick(`r-${i}`))}
+        {Array.from({ length: sideN }).map((_, i) => brickVert(`r-${i}`))}
       </View>
     </>
   );
@@ -292,11 +296,20 @@ const styles = StyleSheet.create({
     marginRight: MORTAR,
     marginBottom: MORTAR,
   },
+  brickHorizontal: {
+    width: BRICK_W - MORTAR,
+    height: BRICK_H - MORTAR,
+    backgroundColor: PALETTE.red,
+    borderWidth: 1,
+    borderColor: PALETTE.maroon,
+    marginRight: MORTAR,
+  },
   brickStrip: {
     position: 'absolute',
     left: 0,
+    height: BRICK_H,
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
   },
   brickStripCol: {
     position: 'absolute',
