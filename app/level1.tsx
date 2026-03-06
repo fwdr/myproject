@@ -40,6 +40,7 @@ const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
 const MENU_BAR_HEIGHT = 48;
+const GAP_HEIGHT = GUN_SIZE + 12; // tunnel opening - just big enough for gun
 let missileId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
@@ -47,7 +48,15 @@ type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 
 function BrickWall({ width, height }: { width: number; height: number }) {
   const topN = Math.ceil(width / BRICK_W) + 2;
-  const sideN = Math.ceil((height - BRICK_H * 2) / BRICK_H);
+  const sideHeight = height - BRICK_H * 2;
+  const sideN = Math.ceil(sideHeight / BRICK_H);
+  const gapTop = (sideHeight - GAP_HEIGHT) / 2;
+  const gapBottom = gapTop + GAP_HEIGHT;
+  const inGap = (i: number) => {
+    const brickTop = i * BRICK_H;
+    const brickBottom = brickTop + (BRICK_H - MORTAR);
+    return brickBottom > gapTop && brickTop < gapBottom;
+  };
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
@@ -75,11 +84,15 @@ function BrickWall({ width, height }: { width: number; height: number }) {
           brickHoriz(`b-${i}`, i % 2 === 0 ? BRICK_W / 2 : 0)
         )}
       </View>
-      <View style={[styles.brickStripCol, styles.brickLeft, { height: height - BRICK_H * 2 }]}>
-        {Array.from({ length: sideN }).map((_, i) => brickVert(`l-${i}`))}
+      <View style={[styles.brickStripCol, styles.brickLeft, { height: sideHeight }]}>
+        {Array.from({ length: sideN }).map((_, i) =>
+          inGap(i) ? null : brickVert(`l-${i}`)
+        )}
       </View>
-      <View style={[styles.brickStripCol, styles.brickRight, { height: height - BRICK_H * 2 }]}>
-        {Array.from({ length: sideN }).map((_, i) => brickVert(`r-${i}`))}
+      <View style={[styles.brickStripCol, styles.brickRight, { height: sideHeight }]}>
+        {Array.from({ length: sideN }).map((_, i) =>
+          inGap(i) ? null : brickVert(`r-${i}`)
+        )}
       </View>
     </>
   );
@@ -169,8 +182,10 @@ export default function Level1Screen() {
         let x = g.x + vx;
         let y = g.y + vy;
         const pad = GUN_SIZE / 2;
-        x = Math.max(pad, Math.min(width - pad, x));
         y = Math.max(pad, Math.min(height - pad, y));
+        if (x < -pad) x = width - pad - 1;
+        else if (x > width + pad) x = pad + 1;
+        else x = Math.max(-pad, Math.min(width + pad, x));
         const next: Gun = { ...g, x, y };
         gunRef.current = next;
         setGun(next);
