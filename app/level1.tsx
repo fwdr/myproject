@@ -140,8 +140,8 @@ export default function Level1Screen() {
   const missilesRef = useRef<Missile[]>([]);
   const obstaclesRef = useRef<Obstacle[]>([]);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
+  const livesRef = useRef(INITIAL_LIVES);
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
-  const respawnTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
@@ -158,6 +158,10 @@ export default function Level1Screen() {
   useEffect(() => {
     obstaclesRef.current = obstacles;
   }, [obstacles]);
+
+  useEffect(() => {
+    livesRef.current = lives;
+  }, [lives]);
 
   useEffect(() => {
     const w = innerWidth;
@@ -261,14 +265,13 @@ export default function Level1Screen() {
         for (const o of obs) {
           if (o.health <= 0) continue;
           if (hitTest(x, y, GUN_RADIUS, o.x, o.y, OBSTACLE_RADIUS)) {
-            setLives((l) => {
-              const newLives = Math.max(0, l - 1);
-              if (newLives <= 0) setGameActive(false);
-              return newLives;
-            });
+            const newLives = Math.max(0, livesRef.current - 1);
+            livesRef.current = newLives;
+            setLives(newLives);
+            if (newLives <= 0) setGameActive(false);
             setGun(null);
             gunRef.current = null;
-            setLives((l) => {
+            if (newLives > 0) {
               const padding = GUN_SIZE + 10;
               const nx = padding + Math.random() * (width - padding * 2);
               const ny = padding + Math.random() * (height - padding * 2);
@@ -277,9 +280,7 @@ export default function Level1Screen() {
                 gunRef.current = ng;
                 setGun(ng);
               }, 500);
-              }
-              return l;
-            });
+            }
             break;
           }
         }
