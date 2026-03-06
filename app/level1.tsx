@@ -181,12 +181,22 @@ export default function Level1Screen() {
         const vy = g.vy || 0;
         let x = g.x + vx;
         let y = g.y + vy;
+        let nextVx = vx;
         const pad = GUN_SIZE / 2;
+        const gapTop = (height - GAP_HEIGHT) / 2;
+        const gapBottom = gapTop + GAP_HEIGHT;
+        const inGap = (gy: number) => gy >= gapTop && gy <= gapBottom;
+
         y = Math.max(pad, Math.min(height - pad, y));
-        if (x < -pad) x = width - pad - 1;
-        else if (x > width + pad) x = pad + 1;
-        else x = Math.max(-pad, Math.min(width + pad, x));
-        const next: Gun = { ...g, x, y };
+
+        if (x < pad) {
+          if (inGap(y)) x = width - pad - 1;
+          else { x = pad; nextVx = 0; }
+        } else if (x > width - pad) {
+          if (inGap(y)) x = pad + 1;
+          else { x = width - pad; nextVx = 0; }
+        }
+        const next: Gun = { ...g, x, y, vx: nextVx, vy };
         gunRef.current = next;
         setGun(next);
       }
