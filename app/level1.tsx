@@ -336,15 +336,19 @@ export default function Level1Screen() {
         >
           <Text style={[styles.closeIcon, { fontFamily: 'PressStart2P_400Regular' }]}>✕</Text>
         </TouchableOpacity>
-        <Text
-          style={[
-            styles.scoreText,
-            { fontFamily: 'PressStart2P_400Regular' },
-          ]}
-        >
-          {String(score).padStart(5, '0')}
+        <Text style={[styles.levelText, { fontFamily: 'PressStart2P_400Regular' }]}>
+          L-01
         </Text>
-        <View style={styles.livesRow}>
+        <View style={styles.menuRight}>
+          <Text
+            style={[
+              styles.scoreText,
+              { fontFamily: 'PressStart2P_400Regular' },
+            ]}
+          >
+            {String(score).padStart(5, '0')}
+          </Text>
+          <View style={styles.livesRow}>
           {Array.from({ length: INITIAL_LIVES }).map((_, i) => (
             <Text
               key={i}
@@ -357,6 +361,7 @@ export default function Level1Screen() {
               ●
             </Text>
           ))}
+          </View>
         </View>
       </View>
 
@@ -461,6 +466,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: PALETTE.yellow,
     letterSpacing: 1,
+  },
+  levelText: {
+    fontSize: 12,
+    color: PALETTE.cyan,
+    letterSpacing: 1,
+  },
+  menuRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
   },
   scoreText: {
     fontSize: 14,

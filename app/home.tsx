@@ -1,3 +1,4 @@
+import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useGame } from '../context/GameContext';
@@ -5,6 +6,9 @@ import { useGame } from '../context/GameContext';
 export default function HomeScreen() {
   const router = useRouter();
   const { highScore } = useGame();
+  const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+
+  if (!fontsLoaded) return null;
 
   return (
     <View style={styles.container}>
@@ -24,7 +28,7 @@ export default function HomeScreen() {
         onPress={() => router.push('/level1')}
         activeOpacity={0.8}
       >
-        <Text style={styles.playButtonText}>Play Level 1</Text>
+        <Text style={[styles.playButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>PLAY</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -50,15 +54,16 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   highScoreLabel: {
-    fontSize: 14,
+    fontSize: 10,
     color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 2,
+    fontFamily: 'PressStart2P_400Regular',
   },
   highScoreValue: {
-    fontSize: 36,
-    fontWeight: '800',
+    fontSize: 24,
     color: '#f0c14b',
+    letterSpacing: 2,
+    fontFamily: 'PressStart2P_400Regular',
   },
   graphicContainer: {
     flex: 1,
@@ -79,21 +84,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   graphicText: {
-    fontSize: 16,
+    fontSize: 10,
     color: '#666',
+    fontFamily: 'PressStart2P_400Regular',
+    letterSpacing: 1,
   },
   playButton: {
     backgroundColor: '#4ade80',
     paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 16,
+    paddingHorizontal: 40,
+    borderWidth: 3,
+    borderColor: '#22c55e',
     alignItems: 'center',
     marginBottom: 24,
   },
   playButtonText: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 16,
     color: '#1a1a2e',
+    letterSpacing: 2,
   },
   settingsButton: {
     position: 'absolute',
