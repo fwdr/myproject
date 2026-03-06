@@ -11,7 +11,6 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeTouchEvent,
-  Platform,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 
@@ -368,7 +367,7 @@ export default function Level1Screen() {
             style={styles.gameOverButton}
             onPress={() => handleEndGame(score)}
           >
-            <Text style={[styles.gameOverButtonText, fontsLoaded && { fontFamily: 'PressStart2P_400Regular' }]}>
+            <Text style={[styles.gameOverButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
               EXIT
             </Text>
           </TouchableOpacity>
