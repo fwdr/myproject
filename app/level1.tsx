@@ -1,3 +1,5 @@
+import { useFonts } from '@expo-google-fonts/press-start-2p/useFonts';
+import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p/400Regular';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -9,6 +11,7 @@ import {
   Dimensions,
   NativeSyntheticEvent,
   NativeTouchEvent,
+  Platform,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 
@@ -40,11 +43,18 @@ const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
 const MENU_BAR_HEIGHT = 48;
-const GAP_HEIGHT = GUN_SIZE * 2; // tunnel opening - 2x gun size, centered halfway down
+const GAP_HEIGHT = GUN_SIZE * 2;
+const OBSTACLE_SIZE = 20;
+const OBSTACLE_HP = 10;
+const OBSTACLE_POINTS = 10;
+const INITIAL_LIVES = 3;
+const GUN_RADIUS = GUN_SIZE / 2;
+const OBSTACLE_RADIUS = OBSTACLE_SIZE / 2;
 let missileId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
+type Obstacle = { id: number; x: number; y: number; health: number };
 
 function BrickWall({
   width,
@@ -122,10 +132,32 @@ export default function Level1Screen() {
   const innerHeight = playAreaHeight - 2 * BRICK_H;
   const [gun, setGun] = useState<Gun | null>(null);
   const [missiles, setMissiles] = useState<Missile[]>([]);
+  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
+  const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(INITIAL_LIVES);
+  const [gameActive, setGameActive] = useState(true);
   const gunRef = useRef<Gun | null>(null);
   const missilesRef = useRef<Missile[]>([]);
+  const obstaclesRef = useRef<Obstacle[]>([]);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
+  const respawnTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+
+  useEffect(() => {
+    const w = innerWidth;
+    const h = innerHeight;
+    setObstacles([
+      { id: 1, x: w * 0.25, y: h * 0.3, health: OBSTACLE_HP },
+      { id: 2, x: w * 0.5, y: h * 0.6, health: OBSTACLE_HP },
+      { id: 3, x: w * 0.75, y: h * 0.3, health: OBSTACLE_HP },
+    ]);
+  }, [innerWidth, innerHeight]);
+
+  useEffect(() => {
+    obstaclesRef.current = obstacles;
+  }, [obstacles]);
 
   useEffect(() => {
     const w = innerWidth;
@@ -138,6 +170,12 @@ export default function Level1Screen() {
     setGun(g);
     gunRef.current = g;
   }, [innerWidth, innerHeight]);
+
+  const hitTest = useCallback((ax: number, ay: number, ar: number, bx: number, by: number, br: number) => {
+    const dx = ax - bx;
+    const dy = ay - by;
+    return dx * dx + dy * dy < (ar + br) * (ar + br);
+  }, []);
 
   const gameAreaRef = useRef<View>(null);
   const [gameAreaLayout, setGameAreaLayout] = useState({ x: 0, y: 0 });
@@ -186,10 +224,13 @@ export default function Level1Screen() {
   );
 
   useEffect(() => {
+    if (!gameActive || !fontsLoaded) return;
     let rafId: number;
     const tick = () => {
       const { width, height } = dimensionsRef.current;
+      const obs = obstaclesRef.current;
       const g = gunRef.current;
+
       if (g) {
         const vx = g.vx || 0;
         const vy = g.vy || 0;
@@ -212,29 +253,71 @@ export default function Level1Screen() {
           if (inGap(y)) x = pad + 1;
           else { x = width - pad; nextVx = 0; }
         }
-        const next: Gun = { ...g, x, y, vx: nextVx, vy };
-        gunRef.current = next;
-        setGun(next);
+
+        const nextGun: Gun = { ...g, x, y, vx: nextVx, vy };
+        gunRef.current = nextGun;
+        setGun(nextGun);
+
+        for (const o of obs) {
+          if (o.health <= 0) continue;
+          if (hitTest(x, y, GUN_RADIUS, o.x, o.y, OBSTACLE_RADIUS)) {
+            setLives((l) => {
+              const next = l - 1;
+              if (next <= 0) setGameActive(false);
+              return next;
+            });
+            setGun(null);
+            gunRef.current = null;
+            const padding = GUN_SIZE + 10;
+            const nx = padding + Math.random() * (width - padding * 2);
+            const ny = padding + Math.random() * (height - padding * 2);
+            setTimeout(() => {
+              const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
+              gunRef.current = ng;
+              setGun(ng);
+            }, 500);
+            break;
+          }
+        }
       }
+
       setMissiles((prev) => {
         if (prev.length === 0) return prev;
-        const next = prev
-          .map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }))
-          .filter(
-            (m) =>
-              m.x >= -20 &&
-              m.x <= width + 20 &&
-              m.y >= -20 &&
-              m.y <= height + 20
-          );
-        missilesRef.current = next;
-        return next;
+        const moved = prev.map((m) => ({
+          ...m,
+          x: m.x + m.dx,
+          y: m.y + m.dy,
+        }));
+        const obsCopy = [...obstaclesRef.current];
+        let scoreAdd = 0;
+        const filtered = moved.filter((m) => {
+          for (let i = 0; i < obsCopy.length; i++) {
+            const o = obsCopy[i];
+            if (o.health <= 0) continue;
+            if (hitTest(m.x, m.y, MISSILE_SIZE / 2, o.x, o.y, OBSTACLE_RADIUS)) {
+              obsCopy[i] = { ...o, health: o.health - 1 };
+              if (obsCopy[i].health <= 0) scoreAdd += OBSTACLE_POINTS;
+              setObstacles(obsCopy.filter((x) => x.health > 0).length ? obsCopy : obsCopy.map((x) => ({ ...x, health: Math.max(0, x.health) })));
+              if (obsCopy[i].health <= 0) {
+                setObstacles((prev) => prev.filter((ob) => ob.id !== o.id || ob.health > 0));
+              } else {
+                setObstacles(obsCopy);
+              }
+              if (scoreAdd) setScore((s) => s + scoreAdd);
+              return false;
+            }
+          }
+          return m.x >= -20 && m.x <= width + 20 && m.y >= -20 && m.y <= height + 20;
+        });
+        obstaclesRef.current = obsCopy;
+        missilesRef.current = filtered;
+        return filtered;
       });
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, []);
+  }, [gameActive, fontsLoaded, hitTest]);
 
   const handleEndGame = (score: number) => {
     setHighScore((prev) => Math.max(prev, score));
