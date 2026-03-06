@@ -257,13 +257,11 @@ export default function Level1Screen() {
           else { x = width - pad; nextVx = 0; }
         }
 
-        const nextGun: Gun = { ...g, x, y, vx: nextVx, vy };
-        gunRef.current = nextGun;
-        setGun(nextGun);
-
+        let hitObstacle = false;
         for (const o of obs) {
           if (o.health <= 0) continue;
           if (hitTest(x, y, GUN_RADIUS, o.x, o.y, OBSTACLE_RADIUS)) {
+            hitObstacle = true;
             const newLives = Math.max(0, livesRef.current - 1);
             livesRef.current = newLives;
             setLives(newLives);
