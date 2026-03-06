@@ -133,7 +133,7 @@ export default function Level1Screen() {
       const dx = tapX - g.x;
       const dy = tapY - g.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < 2) return; // ignore tap on gun center
+      if (distance < GUN_SIZE) return; // only change direction when tapping outside the gun
 
       const rotation = (Math.atan2(dx, -dy) * 180) / Math.PI;
       const invD = 1 / distance;
