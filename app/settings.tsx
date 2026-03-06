@@ -10,7 +10,7 @@ import { useGame } from '../context/GameContext';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { soundEnabled, setSoundEnabled } = useGame();
+  const { soundEnabled, setSoundEnabled, resetHighScore } = useGame();
 
   return (
     <View style={styles.container}>
@@ -33,6 +33,10 @@ export default function SettingsScreen() {
           thumbColor="#fff"
         />
       </View>
+
+      <TouchableOpacity style={styles.resetButton} onPress={resetHighScore}>
+        <Text style={styles.resetButtonText}>Reset High Score</Text>
+      </TouchableOpacity>
 
       <Text style={styles.hint}>
         Settings are saved automatically and persist between sessions.
@@ -81,6 +85,20 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     color: '#eee',
+  },
+  resetButton: {
+    marginTop: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(239, 68, 68, 0.2)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#ef4444',
+  },
+  resetButtonText: {
+    fontSize: 16,
+    color: '#ef4444',
+    fontWeight: '600',
   },
   hint: {
     marginTop: 24,

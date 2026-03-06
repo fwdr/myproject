@@ -11,6 +11,7 @@ type GameContextValue = {
   setSoundEnabled: (value: boolean) => void;
   highScore: number;
   setHighScore: (value: number | ((prev: number) => number)) => void;
+  resetHighScore: () => void;
   isLoading: boolean;
 };
 
@@ -53,6 +54,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  const resetHighScore = useCallback(async () => {
+    setHighScoreState(0);
+    await AsyncStorage.setItem(STORAGE_KEYS.HIGH_SCORE, '0');
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -60,6 +66,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setSoundEnabled,
         highScore,
         setHighScore,
+        resetHighScore,
         isLoading,
       }}
     >

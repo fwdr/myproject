@@ -14,7 +14,9 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.highScoreLabel}>High Score</Text>
-        <Text style={styles.highScoreValue}>{highScore}</Text>
+        <Text style={styles.highScoreValue}>
+          {String(highScore).padStart(5, '0')}
+        </Text>
       </View>
 
       <View style={styles.graphicContainer}>
