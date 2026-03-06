@@ -1,11 +1,41 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+} from 'react-native';
 import { useGame } from '../context/GameContext';
 
+// Retro 16-color EGA palette
+const PALETTE = {
+  black: '#000000',
+  navy: '#000080',
+  green: '#008000',
+  teal: '#008080',
+  maroon: '#800000',
+  purple: '#800080',
+  olive: '#808000',
+  silver: '#C0C0C0',
+  gray: '#808080',
+  blue: '#0000FF',
+  lime: '#00FF00',
+  cyan: '#00FFFF',
+  red: '#FF0000',
+  magenta: '#FF00FF',
+  yellow: '#FFFF00',
+  white: '#FFFFFF',
+};
+
 const GUN_SIZE = 24;
-const MISSILE_SIZE = 8;
-const MISSILE_SPEED = 6;
+const MISSILE_SIZE = 4;
+const MISSILE_SPEED = 8;
+let missileId = 0;
+
+type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 
 export default function Level1Screen() {
   const router = useRouter();
@@ -13,7 +43,8 @@ export default function Level1Screen() {
 
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   const [gun, setGun] = useState<{ x: number; y: number; rotation: number } | null>(null);
-  const [missile, setMissile] = useState<{ x: number; y: number; visible: boolean } | null>(null);
+  const [missiles, setMissiles] = useState<Missile[]>([]);
+  const missilesRef = useRef<Missile[]>([]);
   const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -23,35 +54,57 @@ export default function Level1Screen() {
     const y = padding + 100 + Math.random() * (height - 200 - padding * 2);
     const rotation = Math.floor(Math.random() * 360);
     setGun({ x, y, rotation });
+  }, []);
 
-    const rad = (rotation * Math.PI) / 180;
+  const dimensionsRef = useRef(dimensions);
+  dimensionsRef.current = dimensions;
+
+  const fire = useCallback(() => {
+    if (!gun) return;
+    const rad = (gun.rotation * Math.PI) / 180;
     const dx = Math.sin(rad) * MISSILE_SPEED;
     const dy = -Math.cos(rad) * MISSILE_SPEED;
+    const m: Missile = {
+      id: ++missileId,
+      x: gun.x,
+      y: gun.y,
+      dx,
+      dy,
+    };
+    setMissiles((prev) => {
+      const next = [...prev, m];
+      missilesRef.current = next;
+      return next;
+    });
+  }, [gun]);
 
-    setMissile({ x, y, visible: true });
-
-    let mx = x;
-    let my = y;
-
+  useEffect(() => {
+    let rafId: number;
     const tick = () => {
-      mx += dx;
-      my += dy;
-      if (mx < -50 || mx > width + 50 || my < -50 || my > height + 50) {
-        setMissile((m) => m && { ...m, visible: false });
-        return;
-      }
-      setMissile({ x: mx, y: my, visible: true });
-      animationRef.current = requestAnimationFrame(tick);
+      const { width, height } = dimensionsRef.current;
+      setMissiles((prev) => {
+        if (prev.length === 0) return prev;
+        const next = prev
+          .map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }))
+          .filter(
+            (m) =>
+              m.x >= -20 &&
+              m.x <= width + 20 &&
+              m.y >= -20 &&
+              m.y <= height + 20
+          );
+        missilesRef.current = next;
+        return next;
+      });
+      rafId = requestAnimationFrame(tick);
     };
-    animationRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (animationRef.current) cancelAnimationFrame(animationRef.current);
-    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   const handleEndGame = (score: number) => {
     setHighScore((prev) => Math.max(prev, score));
-    router.back();
+    router.replace('/home');
   };
 
   return (
@@ -64,7 +117,10 @@ export default function Level1Screen() {
         <Text style={styles.closeIcon}>✕</Text>
       </TouchableOpacity>
 
-      <View style={[styles.gameArea, { width: dimensions.width, height: dimensions.height }]}>
+      <Pressable
+        style={[styles.gameArea, { width: dimensions.width, height: dimensions.height }]}
+        onPress={fire}
+      >
         {gun && (
           <View
             style={[
@@ -77,18 +133,19 @@ export default function Level1Screen() {
             ]}
           />
         )}
-        {missile?.visible && (
+        {missiles.map((m) => (
           <View
+            key={m.id}
             style={[
               styles.missile,
               {
-                left: missile.x - MISSILE_SIZE / 2,
-                top: missile.y - MISSILE_SIZE / 2,
+                left: m.x - MISSILE_SIZE / 2,
+                top: m.y - MISSILE_SIZE / 2,
               },
             ]}
           />
-        )}
-      </View>
+        ))}
+      </Pressable>
     </View>
   );
 }
@@ -96,7 +153,7 @@ export default function Level1Screen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: PALETTE.navy,
     paddingTop: 50,
   },
   closeButton: {
@@ -108,7 +165,7 @@ const styles = StyleSheet.create({
   },
   closeIcon: {
     fontSize: 24,
-    color: '#888',
+    color: PALETTE.silver,
     fontWeight: '300',
   },
   gameArea: {
@@ -125,13 +182,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: GUN_SIZE,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: '#4ade80',
+    borderBottomColor: PALETTE.lime,
   },
   missile: {
     position: 'absolute',
     width: MISSILE_SIZE,
     height: MISSILE_SIZE,
     borderRadius: MISSILE_SIZE / 2,
-    backgroundColor: '#fbbf24',
+    backgroundColor: PALETTE.yellow,
   },
 });
