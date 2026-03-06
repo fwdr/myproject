@@ -46,14 +46,26 @@ let missileId = 0;
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 
-function BrickWall({ width, height }: { width: number; height: number }) {
+function BrickWall({
+  width,
+  height,
+  innerHeight,
+}: {
+  width: number;
+  height: number;
+  innerHeight: number;
+}) {
   const topN = Math.ceil(width / BRICK_W) + 2;
-  const sideHeight = height - BRICK_H * 2;
+  const sideHeight = innerHeight;
   const sideN = Math.ceil(sideHeight / BRICK_H);
-  const numBricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
-  const gapStartBrick = Math.floor((sideN - numBricksInGap) / 2);
-  const gapEndBrick = gapStartBrick + numBricksInGap - 1;
-  const inGap = (i: number) => i >= gapStartBrick && i <= gapEndBrick;
+  const gapCenterY = innerHeight / 2;
+  const gapTop = gapCenterY - GAP_HEIGHT / 2;
+  const gapBottom = gapCenterY + GAP_HEIGHT / 2;
+  const inGap = (i: number) => {
+    const brickTop = i * BRICK_H;
+    const brickBottom = brickTop + (BRICK_H - MORTAR);
+    return brickBottom > gapTop && brickTop < gapBottom;
+  };
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
@@ -180,13 +192,11 @@ export default function Level1Screen() {
         let y = g.y + vy;
         let nextVx = vx;
         const pad = GUN_SIZE / 2;
-        const sideN = Math.ceil(height / BRICK_H);
-        const numBricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
-        const gapStartBrick = Math.floor((sideN - numBricksInGap) / 2);
-        const gapEndBrick = gapStartBrick + numBricksInGap - 1;
-        const gapTop = gapStartBrick * BRICK_H;
-        const gapBottom = (gapEndBrick + 1) * BRICK_H - MORTAR;
-        const inGap = (gy: number) => gy >= gapTop && gy <= gapBottom;
+        const gapCenterY = height / 2;
+        const gapTop = gapCenterY - GAP_HEIGHT / 2;
+        const gapBottom = gapCenterY + GAP_HEIGHT / 2;
+        const inGap = (gy: number) =>
+          gy >= gapTop - 4 && gy <= gapBottom + 4;
 
         y = Math.max(pad, Math.min(height - pad, y));
 
@@ -239,7 +249,11 @@ export default function Level1Screen() {
       </View>
 
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
-        <BrickWall width={dimensions.width} height={playAreaHeight} />
+        <BrickWall
+          width={dimensions.width}
+          height={playAreaHeight}
+          innerHeight={innerHeight}
+        />
         <Pressable
           ref={gameAreaRef}
           style={[
