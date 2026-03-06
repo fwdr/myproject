@@ -10,7 +10,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#1a1a2e"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.mobilegame.framework"
@@ -21,7 +23,12 @@
       },
       "package": "com.mobilegame.framework"
     },
-    "plugins": ["expo-router"],
-    "web": { "bundler": "metro" }
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ],
+    "web": {
+      "bundler": "metro"
+    }
   }
 }
