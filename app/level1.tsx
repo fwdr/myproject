@@ -60,12 +60,9 @@ function BrickWall({
   const sideN = Math.ceil(sideHeight / BRICK_H);
   const gapCenterY = innerHeight / 2;
   const gapTop = gapCenterY - GAP_HEIGHT / 2;
-  const gapBottom = gapCenterY + GAP_HEIGHT / 2;
-  const inGap = (i: number) => {
-    const brickTop = i * BRICK_H;
-    const brickBottom = brickTop + (BRICK_H - MORTAR);
-    return brickBottom > gapTop && brickTop < gapBottom;
-  };
+  const bricksAboveGap = Math.floor(gapTop / BRICK_H);
+  const bricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
+  const bricksBelowGap = Math.max(0, sideN - bricksAboveGap - bricksInGap);
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
@@ -81,6 +78,18 @@ function BrickWall({
     <View key={key} style={styles.brick} />
   );
 
+  const renderSideColumn = (prefix: string) => (
+    <View style={[styles.brickStripColInner, { height: sideHeight }]}>
+      {Array.from({ length: bricksAboveGap }).map((_, i) =>
+        brickVert(`${prefix}-above-${i}`)
+      )}
+      <View style={styles.gapSpacer} />
+      {Array.from({ length: bricksBelowGap }).map((_, i) =>
+        brickVert(`${prefix}-below-${i}`)
+      )}
+    </View>
+  );
+
   return (
     <>
       <View style={[styles.brickStrip, styles.brickTop, { width }]}>
@@ -93,15 +102,11 @@ function BrickWall({
           brickHoriz(`b-${i}`, i % 2 === 0 ? BRICK_W / 2 : 0)
         )}
       </View>
-      <View style={[styles.brickStripCol, styles.brickLeft, { height: sideHeight }]}>
-        {Array.from({ length: sideN }).map((_, i) =>
-          inGap(i) ? null : brickVert(`l-${i}`)
-        )}
+      <View style={[styles.brickStripCol, styles.brickLeft]}>
+        {renderSideColumn('l')}
       </View>
-      <View style={[styles.brickStripCol, styles.brickRight, { height: sideHeight }]}>
-        {Array.from({ length: sideN }).map((_, i) =>
-          inGap(i) ? null : brickVert(`r-${i}`)
-        )}
+      <View style={[styles.brickStripCol, styles.brickRight]}>
+        {renderSideColumn('r')}
       </View>
     </>
   );
@@ -355,6 +360,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: BRICK_H,
     flexDirection: 'column',
+  },
+  brickStripColInner: {
+    flexDirection: 'column',
+  },
+  gapSpacer: {
+    height: GAP_HEIGHT,
+    width: BRICK_W - MORTAR,
   },
   brickTop: { top: 0 },
   brickBottom: { bottom: 0 },
