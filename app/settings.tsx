@@ -9,11 +9,11 @@ export default function SettingsScreen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.backButton}
+        style={styles.closeButton}
         onPress={() => router.back()}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
-        <Text style={styles.backLabel}>← Back</Text>
+        <Text style={styles.closeIcon}>✕</Text>
       </TouchableOpacity>
 
       <Text style={styles.title}>Settings</Text>
@@ -42,18 +42,23 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 24,
   },
-  backButton: {
-    marginBottom: 24,
+  closeButton: {
+    position: 'absolute',
+    top: 50,
+    left: 24,
+    zIndex: 10,
+    padding: 4,
   },
-  backLabel: {
-    fontSize: 17,
-    color: '#4ade80',
-    fontWeight: '600',
+  closeIcon: {
+    fontSize: 24,
+    color: '#888',
+    fontWeight: '300',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#eee',
+    marginTop: 48,
     marginBottom: 32,
   },
   row: {
