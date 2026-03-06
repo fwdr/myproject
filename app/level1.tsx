@@ -1,5 +1,7 @@
-import { useFonts } from '@expo-google-fonts/press-start-2p/useFonts';
-import { PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p/400Regular';
+import {
+  useFonts,
+  PressStart2P_400Regular,
+} from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -280,6 +282,11 @@ export default function Level1Screen() {
             }
             break;
           }
+        }
+        if (!hitObstacle) {
+          const nextGun: Gun = { ...g, x, y, vx: nextVx, vy };
+          gunRef.current = nextGun;
+          setGun(nextGun);
         }
       }
 
