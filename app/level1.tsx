@@ -1,10 +1,53 @@
 import { useRouter } from 'expo-router';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useGame } from '../context/GameContext';
+
+const GUN_SIZE = 24;
+const MISSILE_SIZE = 8;
+const MISSILE_SPEED = 6;
 
 export default function Level1Screen() {
   const router = useRouter();
   const { setHighScore } = useGame();
+
+  const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
+  const [gun, setGun] = useState<{ x: number; y: number; rotation: number } | null>(null);
+  const [missile, setMissile] = useState<{ x: number; y: number; visible: boolean } | null>(null);
+  const animationRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const { width, height } = dimensions;
+    const padding = GUN_SIZE + 20;
+    const x = padding + Math.random() * (width - padding * 2);
+    const y = padding + 100 + Math.random() * (height - 200 - padding * 2);
+    const rotation = Math.floor(Math.random() * 360);
+    setGun({ x, y, rotation });
+
+    const rad = (rotation * Math.PI) / 180;
+    const dx = Math.sin(rad) * MISSILE_SPEED;
+    const dy = -Math.cos(rad) * MISSILE_SPEED;
+
+    setMissile({ x, y, visible: true });
+
+    let mx = x;
+    let my = y;
+
+    const tick = () => {
+      mx += dx;
+      my += dy;
+      if (mx < -50 || mx > width + 50 || my < -50 || my > height + 50) {
+        setMissile((m) => m && { ...m, visible: false });
+        return;
+      }
+      setMissile({ x: mx, y: my, visible: true });
+      animationRef.current = requestAnimationFrame(tick);
+    };
+    animationRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+    };
+  }, []);
 
   const handleEndGame = (score: number) => {
     setHighScore((prev) => Math.max(prev, score));
@@ -21,10 +64,31 @@ export default function Level1Screen() {
         <Text style={styles.backLabel}>← Back</Text>
       </TouchableOpacity>
 
-      <Text style={styles.title}>Level 1</Text>
-      <Text style={styles.placeholder}>
-        Add your game logic here. This is a placeholder.
-      </Text>
+      <View style={[styles.gameArea, { width: dimensions.width, height: dimensions.height }]}>
+        {gun && (
+          <View
+            style={[
+              styles.gun,
+              {
+                left: gun.x - GUN_SIZE / 2,
+                top: gun.y - GUN_SIZE / 2,
+                transform: [{ rotate: `${gun.rotation}deg` }],
+              },
+            ]}
+          />
+        )}
+        {missile?.visible && (
+          <View
+            style={[
+              styles.missile,
+              {
+                left: missile.x - MISSILE_SIZE / 2,
+                top: missile.y - MISSILE_SIZE / 2,
+              },
+            ]}
+          />
+        )}
+      </View>
 
       <TouchableOpacity
         style={styles.button}
@@ -41,34 +105,50 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a2e',
-    paddingTop: 60,
-    paddingHorizontal: 24,
+    paddingTop: 50,
   },
   backButton: {
-    marginBottom: 24,
+    position: 'absolute',
+    top: 50,
+    left: 24,
+    zIndex: 10,
   },
   backLabel: {
     fontSize: 17,
     color: '#4ade80',
     fontWeight: '600',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#eee',
-    marginBottom: 16,
+  gameArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
-  placeholder: {
-    fontSize: 16,
-    color: '#888',
-    marginBottom: 32,
+  gun: {
+    position: 'absolute',
+    width: GUN_SIZE,
+    height: GUN_SIZE,
+    borderLeftWidth: GUN_SIZE / 2,
+    borderRightWidth: GUN_SIZE / 2,
+    borderBottomWidth: GUN_SIZE,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#4ade80',
+  },
+  missile: {
+    position: 'absolute',
+    width: MISSILE_SIZE,
+    height: MISSILE_SIZE,
+    borderRadius: MISSILE_SIZE / 2,
+    backgroundColor: '#fbbf24',
   },
   button: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
     backgroundColor: 'rgba(74, 222, 128, 0.2)',
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    alignSelf: 'flex-start',
   },
   buttonText: {
     fontSize: 16,
