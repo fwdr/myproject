@@ -1,5 +1,11 @@
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+
+let appVersion = '1.0.0';
+try {
+  const v = require('../version.json');
+  appVersion = v.display || `${v.version} (${v.build})`;
+} catch (_) {}
 import { useGame } from '../context/GameContext';
 
 export default function SettingsScreen() {
@@ -31,6 +37,8 @@ export default function SettingsScreen() {
       <Text style={styles.hint}>
         Settings are saved automatically and persist between sessions.
       </Text>
+
+      <Text style={styles.version}>Version {appVersion}</Text>
     </View>
   );
 }
@@ -79,5 +87,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 20,
+  },
+  version: {
+    marginTop: 32,
+    fontSize: 14,
+    color: '#555',
   },
 });
