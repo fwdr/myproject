@@ -15,6 +15,7 @@ import { BrickWall } from './BrickWall';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
 import { PowerupSprite } from './sprites/PowerupSprite';
+import { Powerup2Sprite } from './sprites/Powerup2Sprite';
 import {
   GUN_SIZE,
   MISSILE_SIZE,
@@ -214,9 +215,13 @@ export function GameScreen({
             const Sprite = def.Sprite;
             return <Sprite key={e.id} x={e.x} y={e.y} />;
           })}
-          {powerups.map((p) => (
-            <PowerupSprite key={p.id} x={p.x} y={p.y} />
-          ))}
+          {powerups.map((p) =>
+            p.typeId === 'big' ? (
+              <Powerup2Sprite key={p.id} x={p.x} y={p.y} />
+            ) : (
+              <PowerupSprite key={p.id} x={p.x} y={p.y} />
+            )
+          )}
           {obstaclePositions.map((o, i) => (
             <View
               key={i}
@@ -229,18 +234,24 @@ export function GameScreen({
               ]}
             />
           ))}
-          {missiles.map((m) => (
-            <View
-              key={m.id}
-              style={[
-                styles.missile,
-                {
-                  left: m.x - MISSILE_SIZE / 2,
-                  top: m.y - MISSILE_SIZE / 2,
-                },
-              ]}
-            />
-          ))}
+          {missiles.map((m) => {
+            const size = m.size ?? MISSILE_SIZE;
+            return (
+              <View
+                key={m.id}
+                style={[
+                  styles.missile,
+                  {
+                    left: m.x - size / 2,
+                    top: m.y - size / 2,
+                    width: size,
+                    height: size,
+                    borderRadius: size / 2,
+                  },
+                ]}
+              />
+            );
+          })}
         </Pressable>
       </View>
     </ScreenLayout>
