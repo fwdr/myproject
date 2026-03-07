@@ -1,6 +1,8 @@
 export const GUN_SIZE = 24;
 export const MISSILE_SIZE = 4;
 export const MISSILE_HIT_RADIUS = 8;
+export const BIG_MISSILE_SIZE = 12;
+export const BIG_MISSILE_HIT_RADIUS = 14;
 export const MISSILE_SPEED = 8;
 export const GUN_SPEED = 3;
 export const BRICK_W = 20;

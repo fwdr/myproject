@@ -4,6 +4,7 @@ export const LEVEL_3: LevelConfig = {
   id: 'level3',
   tunnel: 'horizontal',
   powerups: {
+    type: 'dual',
     spawnChance: 0.04,
     spawnIntervalMs: 2000,
     durationMs: 10000,

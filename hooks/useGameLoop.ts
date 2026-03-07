@@ -13,6 +13,8 @@ import {
   POWERUP_RADIUS,
   DUAL_MISSILE_OFFSET,
   WAVE_TIMEOUT_MS,
+  BIG_MISSILE_SIZE,
+  BIG_MISSILE_HIT_RADIUS,
 } from '../lib/gameConstants';
 import type { Gun, Missile, Enemy, Powerup } from '../lib/gameTypes';
 import type { LevelConfig } from '../config/levels/level1';
@@ -39,6 +41,7 @@ export function useGameLoop(
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [powerups, setPowerups] = useState<Powerup[]>([]);
   const [dualMissileUntil, setDualMissileUntil] = useState(0);
+  const [bigMissileUntil, setBigMissileUntil] = useState(0);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(0);
   const [score, setScore] = useState(initialScore);
   const [lives, setLives] = useState(INITIAL_LIVES);
@@ -48,6 +51,7 @@ export function useGameLoop(
   const enemiesRef = useRef<Enemy[]>([]);
   const powerupsRef = useRef<Powerup[]>([]);
   const dualMissileUntilRef = useRef(0);
+  const bigMissileUntilRef = useRef(0);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   const livesRef = useRef(INITIAL_LIVES);
   const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
@@ -85,6 +89,10 @@ export function useGameLoop(
   useEffect(() => {
     dualMissileUntilRef.current = dualMissileUntil;
   }, [dualMissileUntil]);
+
+  useEffect(() => {
+    bigMissileUntilRef.current = bigMissileUntil;
+  }, [bigMissileUntil]);
 
   useEffect(() => {
     livesRef.current = lives;
@@ -197,7 +205,10 @@ export function useGameLoop(
       if (Math.random() >= powerupConfig.spawnChance) return;
       const x = margin + Math.random() * (w - margin * 2);
       const y = margin + Math.random() * (h - margin * 2);
-      setPowerups((prev) => [...prev, { id: ++powerupIdRef.current, x, y }]);
+      setPowerups((prev) => [
+        ...prev,
+        { id: ++powerupIdRef.current, x, y, typeId: powerupConfig.type },
+      ]);
     }, powerupConfig.spawnIntervalMs);
     return () => clearInterval(interval);
   }, [gameActive, levelComplete, powerupConfig, innerWidth, innerHeight]);
@@ -307,8 +318,13 @@ export function useGameLoop(
             if (hitTest(x, y, GUN_RADIUS, p.x, p.y, POWERUP_RADIUS)) {
               setPowerups((prev) => prev.filter((pu) => pu.id !== p.id));
               const until = Date.now() + powerupConfig.durationMs;
-              setDualMissileUntil(until);
-              dualMissileUntilRef.current = until;
+              if (p.typeId === 'dual') {
+                setDualMissileUntil(until);
+                dualMissileUntilRef.current = until;
+              } else {
+                setBigMissileUntil(until);
+                bigMissileUntilRef.current = until;
+              }
               break;
             }
           }
@@ -350,9 +366,11 @@ export function useGameLoop(
       let enemiesAfterHits = enemiesNext;
       const movedMissiles = prevMissiles.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
       const survivingMissiles = movedMissiles.filter((m) => {
+        const hitRadius = m.hitRadius ?? MISSILE_HIT_RADIUS;
+        const damage = m.damage ?? 1;
         if (hasObstacles) {
           for (const o of obstaclesRef.current) {
-            if (hitTest(m.x, m.y, MISSILE_HIT_RADIUS, o.x, o.y, STATIC_OBSTACLE_RADIUS)) return false;
+            if (hitTest(m.x, m.y, hitRadius, o.x, o.y, STATIC_OBSTACLE_RADIUS)) return false;
           }
         }
         for (let i = 0; i < enemiesAfterHits.length; i++) {
@@ -360,8 +378,8 @@ export function useGameLoop(
           if (e.health <= 0) continue;
           const r = getEnemyType(e.typeId).radius;
           const def = getEnemyType(e.typeId);
-          if (hitTest(m.x, m.y, MISSILE_HIT_RADIUS, e.x, e.y, r)) {
-            const damaged = { ...e, health: e.health - 1 };
+          if (hitTest(m.x, m.y, hitRadius, e.x, e.y, r)) {
+            const damaged = { ...e, health: Math.max(0, e.health - damage) };
             if (damaged.health <= 0) scoreDelta += def.points;
             enemiesAfterHits = [
               ...enemiesAfterHits.slice(0, i),
@@ -424,37 +442,33 @@ export function useGameLoop(
       setGun({ ...g, rotation, vx, vy });
       const mdx = dx * invD * MISSILE_SPEED;
       const mdy = dy * invD * MISSILE_SPEED;
-      const dualMode = powerupConfig && Date.now() < dualMissileUntilRef.current;
+      const dualMode = powerupConfig?.type === 'dual' && Date.now() < dualMissileUntilRef.current;
+      const bigMode = powerupConfig?.type === 'big' && Date.now() < bigMissileUntilRef.current;
+      const baseMissile = (ox: number, oy: number): Missile =>
+        bigMode
+          ? {
+              id: ++missileIdRef.current,
+              x: g.x + ox,
+              y: g.y + oy,
+              dx: mdx,
+              dy: mdy,
+              damage: 3,
+              hitRadius: BIG_MISSILE_HIT_RADIUS,
+              size: BIG_MISSILE_SIZE,
+            }
+          : { id: ++missileIdRef.current, x: g.x + ox, y: g.y + oy, dx: mdx, dy: mdy };
       if (dualMode) {
-        const perpX = -dy * invD;
-        const perpY = dx * invD;
-        const m1: Missile = {
-          id: ++missileIdRef.current,
-          x: g.x - perpX * DUAL_MISSILE_OFFSET,
-          y: g.y - perpY * DUAL_MISSILE_OFFSET,
-          dx: mdx,
-          dy: mdy,
-        };
-        const m2: Missile = {
-          id: ++missileIdRef.current,
-          x: g.x + perpX * DUAL_MISSILE_OFFSET,
-          y: g.y + perpY * DUAL_MISSILE_OFFSET,
-          dx: mdx,
-          dy: mdy,
-        };
+        const perpX = -dy * invD * DUAL_MISSILE_OFFSET;
+        const perpY = dx * invD * DUAL_MISSILE_OFFSET;
+        const m1 = baseMissile(-perpX, -perpY);
+        const m2 = baseMissile(perpX, perpY);
         setMissiles((prev) => {
           const next = [...prev, m1, m2];
           missilesRef.current = next;
           return next;
         });
       } else {
-        const m: Missile = {
-          id: ++missileIdRef.current,
-          x: g.x,
-          y: g.y,
-          dx: mdx,
-          dy: mdy,
-        };
+        const m = baseMissile(0, 0);
         setMissiles((prev) => {
           const next = [...prev, m];
           missilesRef.current = next;
