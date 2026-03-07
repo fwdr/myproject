@@ -3,7 +3,7 @@ import {
   PressStart2P_400Regular,
 } from '@expo-google-fonts/press-start-2p';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
-import { LEVEL_2 } from '../config/levels/level2';
+import { LEVEL_3 } from '../config/levels/level3';
 import type { TunnelType } from '../config/levels/level1';
 import { getEnemyType } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
@@ -53,8 +53,7 @@ const GAP_HEIGHT = GUN_SIZE * 2;
 const INITIAL_LIVES = 3;
 const GUN_RADIUS = GUN_SIZE / 2;
 const ENEMY_SPEED = 1.5;
-const STATIC_OBSTACLE_RADIUS = 16;
-const L2_BG = '#1a0a2e';
+const L3_BG = PALETTE.navy;
 let missileId = 0;
 let enemyId = 0;
 
@@ -62,10 +61,10 @@ type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 type Enemy = { id: number; typeId: EnemyTypeId; x: number; y: number; health: number };
 
-const L2_BRICK_BG = PALETTE.teal;
-const L2_BRICK_BORDER = PALETTE.cyan;
+const L3_BRICK_BG = PALETTE.teal;
+const L3_BRICK_BORDER = PALETTE.cyan;
 
-function BrickWallL2({
+function BrickWallL3({
   width,
   height,
   innerHeight,
@@ -85,7 +84,7 @@ function BrickWallL2({
   const bricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
   const bricksBelowGap = Math.max(0, sideN - bricksAboveGap - bricksInGap);
   const hasSideGaps = tunnel === 'horizontal';
-  const brickStyle = { backgroundColor: L2_BRICK_BG, borderColor: L2_BRICK_BORDER };
+  const brickStyle = { backgroundColor: L3_BRICK_BG, borderColor: L3_BRICK_BORDER };
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
@@ -142,7 +141,7 @@ function BrickWallL2({
   );
 }
 
-export default function Level2Screen() {
+export default function Level3Screen() {
   const router = useRouter();
   const { score: initialScoreParam } = useLocalSearchParams<{ score?: string }>();
   const initialScore = parseInt(initialScoreParam ?? '0', 10) || 0;
@@ -172,28 +171,16 @@ export default function Level2Screen() {
   const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
 
-  const obstaclePositions = useMemo(() => {
-    const obs = LEVEL_2.staticObstacles ?? [];
-    return obs.map((o) => ({
-      x: o.x * innerWidth,
-      y: o.y * innerHeight,
-    }));
-  }, [innerWidth, innerHeight]);
-
-  const obstaclesRef = useRef(obstaclePositions);
-  obstaclesRef.current = obstaclePositions;
-
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
   useEffect(() => {
     const w = innerWidth;
     const h = innerHeight;
     if (w <= 0 || h <= 0) return;
-    const waves = LEVEL_2.waves;
+    const waves = LEVEL_3.waves;
     if (currentWaveIndex >= waves.length) return;
 
     const wave = waves[currentWaveIndex];
-    const newEnemies: Enemy[] = [];
     const margin = 8;
     const spawnAtEdge = () => {
       const side = Math.floor(Math.random() * 4);
@@ -202,20 +189,36 @@ export default function Level2Screen() {
       if (side === 2) return { x: margin + Math.random() * (w - margin * 2), y: h };
       return { x: 0, y: margin + Math.random() * (h - margin * 2) };
     };
+
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
     for (const spawn of wave) {
       const def = getEnemyType(spawn.enemyType);
+      const delayMs = spawn.spawnDelayMs ?? 0;
       for (let i = 0; i < spawn.count; i++) {
+        const delay = i * delayMs;
         const { x, y } = spawnAtEdge();
-        newEnemies.push({
+        const newEnemy = {
           id: ++enemyId,
           typeId: spawn.enemyType,
           x,
           y,
           health: def.health,
-        });
+        };
+        if (delay === 0) {
+          setEnemies((prev) => [...prev, newEnemy]);
+        } else {
+          const t = setTimeout(() => {
+            setEnemies((prev) => [...prev, newEnemy]);
+          }, delay);
+          timeouts.push(t);
+        }
       }
     }
-    setEnemies(newEnemies);
+
+    return () => {
+      timeouts.forEach((t) => clearTimeout(t));
+    };
   }, [innerWidth, innerHeight, currentWaveIndex]);
 
   const prevEnemiesCountRef = useRef(0);
@@ -226,7 +229,7 @@ export default function Level2Screen() {
     prevEnemiesCountRef.current = enemies.length;
 
     if (!wasEmpty && nowEmpty) {
-      const waves = LEVEL_2.waves;
+      const waves = LEVEL_3.waves;
       if (currentWaveIndex < waves.length - 1) {
         setCurrentWaveIndex((i) => i + 1);
       } else {
@@ -313,11 +316,9 @@ export default function Level2Screen() {
       const { width, height } = dimensionsRef.current;
       const g = gunRef.current;
 
-      // Update target: use gun position when available, else keep last known
       const target = g ? { x: g.x, y: g.y } : gunTargetRef.current;
       if (g) gunTargetRef.current = { x: g.x, y: g.y };
 
-      // Move enemies towards the target (always, even when gun is respawning)
       let enemiesNext = enemiesRef.current.map((e) => {
         if (e.health <= 0) return e;
         const dx = target.x - e.x;
@@ -345,7 +346,7 @@ export default function Level2Screen() {
         let y = g.y + vy;
         let nextVx = vx;
         const pad = GUN_SIZE / 2;
-        const tunnelType = LEVEL_2.tunnel ?? 'horizontal';
+        const tunnelType = LEVEL_3.tunnel ?? 'horizontal';
         const gapCenterY = height / 2;
         const gapTop = gapCenterY - GAP_HEIGHT / 2;
         const gapBottom = gapCenterY + GAP_HEIGHT / 2;
@@ -384,36 +385,28 @@ export default function Level2Screen() {
         }
 
         let hitEnemy = false;
-        for (const o of obstaclesRef.current) {
-          if (hitTest(x, y, GUN_RADIUS, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
+        for (const e of obs) {
+          if (e.health <= 0) continue;
+          const r = getEnemyType(e.typeId).radius;
+          if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
             hitEnemy = true;
-            break;
-          }
-        }
-        if (!hitEnemy) {
-          for (const e of obs) {
-            if (e.health <= 0) continue;
-            const r = getEnemyType(e.typeId).radius;
-            if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
-              hitEnemy = true;
-              const newLives = Math.max(0, livesRef.current - 1);
-              livesRef.current = newLives;
-              setLives(newLives);
-              if (newLives <= 0) setGameActive(false);
-              setGun(null);
-              gunRef.current = null;
-              if (newLives > 0) {
-                const padding = GUN_SIZE + 10;
-                const nx = padding + Math.random() * (width - padding * 2);
-                const ny = padding + Math.random() * (height - padding * 2);
-                setTimeout(() => {
-                  const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
-                  gunRef.current = ng;
-                  setGun(ng);
-                }, 500);
-              }
-              break;
+            const newLives = Math.max(0, livesRef.current - 1);
+            livesRef.current = newLives;
+            setLives(newLives);
+            if (newLives <= 0) setGameActive(false);
+            setGun(null);
+            gunRef.current = null;
+            if (newLives > 0) {
+              const padding = GUN_SIZE + 10;
+              const nx = padding + Math.random() * (width - padding * 2);
+              const ny = padding + Math.random() * (height - padding * 2);
+              setTimeout(() => {
+                const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
+                gunRef.current = ng;
+                setGun(ng);
+              }, 500);
             }
+            break;
           }
         }
         if (!hitEnemy) {
@@ -428,11 +421,6 @@ export default function Level2Screen() {
       let enemiesAfterHits = enemiesNext;
       const movedMissiles = prevMissiles.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
       const survivingMissiles = movedMissiles.filter((m) => {
-        for (const o of obstaclesRef.current) {
-          if (hitTest(m.x, m.y, MISSILE_HIT_RADIUS, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
-            return false;
-          }
-        }
         for (let i = 0; i < enemiesAfterHits.length; i++) {
           const e = enemiesAfterHits[i];
           if (e.health <= 0) continue;
@@ -474,8 +462,8 @@ export default function Level2Screen() {
 
   return (
     <ScreenLayout
-      containerStyle={{ backgroundColor: L2_BG }}
-      menuBarStyle={{ backgroundColor: L2_BG, borderBottomColor: PALETTE.magenta }}
+      containerStyle={{ backgroundColor: L3_BG }}
+      menuBarStyle={{ backgroundColor: L3_BG, borderBottomColor: PALETTE.magenta }}
       menuLeft={
         <TouchableOpacity
           onPress={() => handleEndGame(score)}
@@ -486,7 +474,7 @@ export default function Level2Screen() {
       }
       menuCenter={
         <Text style={[styles.levelText, { fontFamily: 'PressStart2P_400Regular' }]}>
-          L-02
+          L-03
         </Text>
       }
       menuRight={
@@ -541,24 +529,21 @@ export default function Level2Screen() {
           </Text>
           <TouchableOpacity
             style={styles.gameOverButton}
-            onPress={() => {
-              setHighScore((prev) => Math.max(prev, score));
-              router.replace({ pathname: '/level3', params: { score: String(score) } });
-            }}
+            onPress={() => handleEndGame(score)}
           >
             <Text style={[styles.gameOverButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-              NEXT
+              EXIT
             </Text>
           </TouchableOpacity>
         </View>
       )}
 
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
-        <BrickWallL2
+        <BrickWallL3
           width={dimensions.width}
           height={playAreaHeight}
           innerHeight={innerHeight}
-          tunnel={LEVEL_2.tunnel ?? 'horizontal'}
+          tunnel={LEVEL_3.tunnel ?? 'horizontal'}
         />
         <Pressable
           ref={gameAreaRef}
@@ -572,18 +557,6 @@ export default function Level2Screen() {
             setGameAreaLayout({ x: layout.x, y: layout.y });
           }}
         >
-          {obstaclePositions.map((o, i) => (
-            <View
-              key={`obs-${i}`}
-              style={[
-                styles.staticObstacle,
-                {
-                  left: o.x - STATIC_OBSTACLE_RADIUS,
-                  top: o.y - STATIC_OBSTACLE_RADIUS,
-                },
-              ]}
-            />
-          ))}
           {gun && (
             <View
               style={[
@@ -752,14 +725,5 @@ const styles = StyleSheet.create({
     height: MISSILE_SIZE,
     borderRadius: MISSILE_SIZE / 2,
     backgroundColor: PALETTE.yellow,
-  },
-  staticObstacle: {
-    position: 'absolute',
-    width: STATIC_OBSTACLE_RADIUS * 2,
-    height: STATIC_OBSTACLE_RADIUS * 2,
-    borderRadius: STATIC_OBSTACLE_RADIUS,
-    backgroundColor: PALETTE.gray,
-    borderWidth: 2,
-    borderColor: PALETTE.silver,
   },
 });

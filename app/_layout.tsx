@@ -17,6 +17,8 @@ export default function RootLayout() {
         <Stack.Screen name="home" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="level1" />
+        <Stack.Screen name="level2" />
+        <Stack.Screen name="level3" />
       </Stack>
     </GameProvider>
   );

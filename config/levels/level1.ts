@@ -3,6 +3,7 @@ import type { EnemyTypeId } from '../enemyTypes';
 export type WaveSpawn = {
   enemyType: EnemyTypeId;
   count: number;
+  spawnDelayMs?: number;
 };
 
 export type StaticObstacle = { x: number; y: number }; // fractional 0-1

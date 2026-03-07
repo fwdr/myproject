@@ -1,8 +1,9 @@
 import type { ComponentType } from 'react';
 import { Enemy1Sprite } from '../components/sprites/Enemy1Sprite';
 import { Enemy2Sprite } from '../components/sprites/Enemy2Sprite';
+import { Enemy3Sprite } from '../components/sprites/Enemy3Sprite';
 
-export type EnemyTypeId = 'type1' | 'type2';
+export type EnemyTypeId = 'type1' | 'type2' | 'type3';
 
 export type EnemyTypeDef = {
   id: EnemyTypeId;
@@ -26,6 +27,13 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
     points: 15,
     radius: 12,
     Sprite: Enemy2Sprite,
+  },
+  type3: {
+    id: 'type3',
+    health: 5,
+    points: 20,
+    radius: 12,
+    Sprite: Enemy3Sprite,
   },
 };
 
