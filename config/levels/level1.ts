@@ -1,16 +1,17 @@
 import type { EnemyTypeId } from '../enemyTypes';
 
+/** scattered = each enemy from different random edge; grouped = all in wave from same point */
+export type SpawnOriginType = 'scattered' | 'grouped';
+
 export type WaveSpawn = {
   enemyType: EnemyTypeId;
   count: number;
   spawnDelayMs?: number;
+  spawnOrigin?: SpawnOriginType;
 };
 
 export type StaticObstacle = { x: number; y: number }; // fractional 0-1
 export type TunnelType = 'none' | 'horizontal' | 'vertical';
-
-/** scattered = each enemy from different random edge; grouped = all in wave from same point */
-export type SpawnOriginType = 'scattered' | 'grouped';
 
 export type LevelConfig = {
   id: string;
