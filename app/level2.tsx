@@ -716,4 +716,13 @@ const styles = StyleSheet.create({
     borderRadius: MISSILE_SIZE / 2,
     backgroundColor: PALETTE.yellow,
   },
+  staticObstacle: {
+    position: 'absolute',
+    width: STATIC_OBSTACLE_RADIUS * 2,
+    height: STATIC_OBSTACLE_RADIUS * 2,
+    borderRadius: STATIC_OBSTACLE_RADIUS,
+    backgroundColor: PALETTE.gray,
+    borderWidth: 2,
+    borderColor: PALETTE.silver,
+  },
 });
