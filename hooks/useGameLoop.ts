@@ -57,6 +57,7 @@ export function useGameLoop(
   const prevEnemiesCountRef = useRef(0);
   const onLevelCompleteRef = useRef(onLevelComplete);
   const currentWaveIndexRef = useRef(currentWaveIndex);
+  const levelStartTimeRef = useRef<number>(0);
   onLevelCompleteRef.current = onLevelComplete;
   currentWaveIndexRef.current = currentWaveIndex;
 
@@ -156,22 +157,6 @@ export function useGameLoop(
     setEnemies((prev) => [...prev, ...newEnemies]);
   }, [innerWidth, innerHeight, currentWaveIndex, config.waves, config.spawnOrigin, levelComplete]);
 
-  // Wave timeout: advance after 10 sec if not already advanced by wave completion
-  useEffect(() => {
-    if (levelComplete || !gameActive) return;
-    const waves = config.waves;
-    if (currentWaveIndex >= waves.length) return;
-    const id = setTimeout(() => {
-      const idx = currentWaveIndexRef.current;
-      if (idx < waves.length - 1) {
-        setCurrentWaveIndex((i) => i + 1);
-      } else {
-        onLevelCompleteRef.current();
-      }
-    }, WAVE_TIMEOUT_MS);
-    return () => clearTimeout(id);
-  }, [currentWaveIndex, config.waves, levelComplete, gameActive]);
-
   // Wave advance (on wave completion)
   useEffect(() => {
     const wasEmpty = prevEnemiesCountRef.current === 0;
@@ -228,12 +213,24 @@ export function useGameLoop(
   const hasObstacles = (config.staticObstacles?.length ?? 0) > 0;
 
   useEffect(() => {
-    const setLevelComplete = () => {}; // will be provided by caller - we need to expose this
     if (!gameActive || levelComplete || !fontsLoaded) return;
+    if (levelStartTimeRef.current === 0) levelStartTimeRef.current = Date.now();
     let rafId: number;
+    const waves = config.waves;
     const tick = () => {
       const { width, height } = dimensionsRef.current;
       const g = gunRef.current;
+
+      const idx = currentWaveIndexRef.current;
+      if (idx < waves.length) {
+        const elapsed = Date.now() - levelStartTimeRef.current;
+        const timeBasedWave = Math.floor(elapsed / WAVE_TIMEOUT_MS);
+        const targetWave = Math.min(timeBasedWave, waves.length - 1);
+        if (idx < targetWave) {
+          setCurrentWaveIndex((i) => i + 1);
+          currentWaveIndexRef.current = idx + 1;
+        }
+      }
       const target = g ? { x: g.x, y: g.y } : gunTargetRef.current;
       if (g) gunTargetRef.current = { x: g.x, y: g.y };
 
