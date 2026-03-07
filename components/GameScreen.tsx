@@ -84,6 +84,7 @@ export function GameScreen({
     missiles,
     enemies,
     powerups,
+    obstaclePositions,
     score,
     lives,
     handleTap,
@@ -215,6 +216,18 @@ export function GameScreen({
           })}
           {powerups.map((p) => (
             <PowerupSprite key={p.id} x={p.x} y={p.y} />
+          ))}
+          {obstaclePositions.map((o, i) => (
+            <View
+              key={i}
+              style={[
+                styles.obstacle,
+                {
+                  left: o.x - STATIC_OBSTACLE_RADIUS,
+                  top: o.y - STATIC_OBSTACLE_RADIUS,
+                },
+              ]}
+            />
           ))}
           {missiles.map((m) => (
             <View

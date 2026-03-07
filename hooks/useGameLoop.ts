@@ -448,6 +448,7 @@ export function useGameLoop(
     missiles,
     enemies,
     powerups,
+    obstaclePositions,
     dualMissileUntilRef,
     score,
     lives,
