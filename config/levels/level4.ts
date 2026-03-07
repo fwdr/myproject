@@ -5,6 +5,6 @@ export const LEVEL_4: LevelConfig = {
   tunnel: 'vertical',
   spawnOrigin: 'grouped',
   waves: [
-    [{ enemyType: 'type4', count: 3 }],
+    [{ enemyType: 'type4', count: 3, spawnDelayMs: 2000 }],
   ],
 };
