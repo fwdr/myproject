@@ -442,8 +442,8 @@ export function useGameLoop(
       setGun({ ...g, rotation, vx, vy });
       const mdx = dx * invD * MISSILE_SPEED;
       const mdy = dy * invD * MISSILE_SPEED;
-      const dualMode = powerupConfig?.type === 'dual' && Date.now() < dualMissileUntilRef.current;
-      const bigMode = powerupConfig?.type === 'big' && Date.now() < bigMissileUntilRef.current;
+      const dualMode = Date.now() < dualMissileUntilRef.current;
+      const bigMode = Date.now() < bigMissileUntilRef.current;
       const baseMissile = (ox: number, oy: number): Missile =>
         bigMode
           ? {
