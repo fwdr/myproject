@@ -547,6 +547,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     letterSpacing: 2,
   },
+  levelCompleteText: {
+    fontSize: 20,
+    color: PALETTE.lime,
+    marginBottom: 16,
+    letterSpacing: 2,
+  },
   gameOverScore: {
     fontSize: 18,
     color: PALETTE.yellow,
@@ -630,13 +636,5 @@ const styles = StyleSheet.create({
     height: MISSILE_SIZE,
     borderRadius: MISSILE_SIZE / 2,
     backgroundColor: PALETTE.yellow,
-  },
-  obstacle: {
-    position: 'absolute',
-    width: OBSTACLE_SIZE,
-    height: OBSTACLE_SIZE,
-    backgroundColor: PALETTE.magenta,
-    borderWidth: 2,
-    borderColor: PALETTE.white,
   },
 });
