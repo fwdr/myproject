@@ -50,6 +50,7 @@ const MORTAR = 1;
 const GAP_HEIGHT = GUN_SIZE * 2;
 const INITIAL_LIVES = 3;
 const GUN_RADIUS = GUN_SIZE / 2;
+const ENEMY_SPEED = 1.5;
 let missileId = 0;
 let enemyId = 0;
 
@@ -159,12 +160,18 @@ export default function Level2Screen() {
 
     const wave = waves[currentWaveIndex];
     const newEnemies: Enemy[] = [];
-    const padding = GUN_SIZE + 20;
+    const margin = 8;
+    const spawnAtEdge = () => {
+      const side = Math.floor(Math.random() * 4);
+      if (side === 0) return { x: margin + Math.random() * (w - margin * 2), y: 0 };
+      if (side === 1) return { x: w, y: margin + Math.random() * (h - margin * 2) };
+      if (side === 2) return { x: margin + Math.random() * (w - margin * 2), y: h };
+      return { x: 0, y: margin + Math.random() * (h - margin * 2) };
+    };
     for (const spawn of wave) {
       const def = getEnemyType(spawn.enemyType);
       for (let i = 0; i < spawn.count; i++) {
-        const x = padding + Math.random() * (w - padding * 2);
-        const y = padding + Math.random() * (h - padding * 2);
+        const { x, y } = spawnAtEdge();
         newEnemies.push({
           id: ++enemyId,
           typeId: spawn.enemyType,
@@ -270,8 +277,29 @@ export default function Level2Screen() {
     let rafId: number;
     const tick = () => {
       const { width, height } = dimensionsRef.current;
-      const obs = enemiesRef.current;
       const g = gunRef.current;
+
+      // Move enemies towards the gun
+      let enemiesNext = enemiesRef.current.map((e) => {
+        if (e.health <= 0) return e;
+        if (!g) return e;
+        const dx = g.x - e.x;
+        const dy = g.y - e.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 1) return e;
+        const vx = (dx / dist) * ENEMY_SPEED;
+        const vy = (dy / dist) * ENEMY_SPEED;
+        const r = getEnemyType(e.typeId).radius;
+        const pad = r + 2;
+        let nx = e.x + vx;
+        let ny = e.y + vy;
+        nx = Math.max(pad, Math.min(width - pad, nx));
+        ny = Math.max(pad, Math.min(height - pad, ny));
+        return { ...e, x: nx, y: ny };
+      });
+      enemiesRef.current = enemiesNext;
+
+      const obs = enemiesRef.current;
 
       if (g) {
         const vx = g.vx || 0;
@@ -328,7 +356,6 @@ export default function Level2Screen() {
         }
       }
 
-      let enemiesNext = [...enemiesRef.current];
       let scoreDelta = 0;
       setMissiles((prev) => {
         if (prev.length === 0) return prev;
