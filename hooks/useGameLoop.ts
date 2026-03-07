@@ -375,8 +375,13 @@ export function useGameLoop(
       setMissiles(survivingMissiles);
       missilesRef.current = survivingMissiles;
       if (prevMissiles.length > 0 || enemiesNext.length > 0) {
-        setEnemies(aliveEnemies);
-        enemiesRef.current = aliveEnemies;
+        setEnemies((prev) => {
+          const processedIds = new Set(aliveEnemies.map((e) => e.id));
+          const newlySpawned = prev.filter((e) => !processedIds.has(e.id));
+          const merged = [...aliveEnemies, ...newlySpawned];
+          enemiesRef.current = merged;
+          return merged;
+        });
       }
       rafId = requestAnimationFrame(tick);
     };
