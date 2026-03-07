@@ -379,12 +379,13 @@ export default function Level2Screen() {
           }
           return m.x >= -20 && m.x <= width + 20 && m.y >= -20 && m.y <= height + 20;
         });
-        setEnemies(enemiesNext.filter((e) => e.health > 0));
-        enemiesRef.current = enemiesNext.filter((e) => e.health > 0);
         if (scoreDelta) setScore((s) => s + scoreDelta);
         missilesRef.current = survivors;
         return survivors;
       });
+      const aliveEnemies = enemiesNext.filter((e) => e.health > 0);
+      setEnemies(aliveEnemies);
+      enemiesRef.current = aliveEnemies;
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
