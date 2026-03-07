@@ -534,7 +534,7 @@ export default function Level3Screen() {
             onPress={() => router.replace({ pathname: '/level4', params: { score: String(score) } })}
           >
             <Text style={[styles.gameOverButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-              EXIT
+              NEXT
             </Text>
           </TouchableOpacity>
         </View>

@@ -172,7 +172,6 @@ export default function Level4Screen() {
     if (currentWaveIndex >= waves.length) return;
 
     const wave = waves[currentWaveIndex];
-    const newEnemies: Enemy[] = [];
     const margin = 8;
     const spawnAtEdge = () => {
       const side = Math.floor(Math.random() * 4);
@@ -183,20 +182,36 @@ export default function Level4Screen() {
     };
     const spawnOrigin = LEVEL_4.spawnOrigin ?? 'scattered';
     const waveOrigin = spawnOrigin === 'grouped' ? spawnAtEdge() : null;
+
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
     for (const spawn of wave) {
       const def = getEnemyType(spawn.enemyType);
+      const delayMs = spawn.spawnDelayMs ?? 0;
       for (let i = 0; i < spawn.count; i++) {
+        const delay = i * delayMs;
         const { x, y } = waveOrigin ?? spawnAtEdge();
-        newEnemies.push({
+        const newEnemy = {
           id: ++enemyId,
           typeId: spawn.enemyType,
           x,
           y,
           health: def.health,
-        });
+        };
+        if (delay === 0) {
+          setEnemies((prev) => [...prev, newEnemy]);
+        } else {
+          const t = setTimeout(() => {
+            setEnemies((prev) => [...prev, newEnemy]);
+          }, delay);
+          timeouts.push(t);
+        }
       }
     }
-    setEnemies(newEnemies);
+
+    return () => {
+      timeouts.forEach((t) => clearTimeout(t));
+    };
   }, [innerWidth, innerHeight, currentWaveIndex]);
 
   const prevEnemiesCountRef = useRef(0);
