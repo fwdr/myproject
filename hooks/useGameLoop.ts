@@ -12,6 +12,7 @@ import {
   STATIC_OBSTACLE_RADIUS,
   POWERUP_RADIUS,
   DUAL_MISSILE_OFFSET,
+  WAVE_TIMEOUT_MS,
 } from '../lib/gameConstants';
 import type { Gun, Missile, Enemy, Powerup } from '../lib/gameTypes';
 import type { LevelConfig } from '../config/levels/level1';
@@ -151,7 +152,22 @@ export function useGameLoop(
     setEnemies(newEnemies);
   }, [innerWidth, innerHeight, currentWaveIndex, config.waves, config.spawnOrigin, levelComplete]);
 
-  // Wave advance
+  // Wave timeout: advance after 10 sec if not already advanced by wave completion
+  useEffect(() => {
+    if (levelComplete || !gameActive) return;
+    const waves = config.waves;
+    if (currentWaveIndex >= waves.length) return;
+    const id = setTimeout(() => {
+      if (currentWaveIndex < waves.length - 1) {
+        setCurrentWaveIndex((i) => i + 1);
+      } else {
+        onLevelComplete();
+      }
+    }, WAVE_TIMEOUT_MS);
+    return () => clearTimeout(id);
+  }, [currentWaveIndex, config.waves, levelComplete, gameActive, onLevelComplete]);
+
+  // Wave advance (on wave completion)
   useEffect(() => {
     const wasEmpty = prevEnemiesCountRef.current === 0;
     const nowEmpty = enemies.length === 0;
