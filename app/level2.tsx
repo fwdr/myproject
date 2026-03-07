@@ -362,28 +362,32 @@ export default function Level2Screen() {
       }
 
       let scoreDelta = 0;
-      setMissiles((prev) => {
-        if (prev.length === 0) return prev;
-        const moved = prev.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
-        const survivors = moved.filter((m) => {
-          for (let i = 0; i < enemiesNext.length; i++) {
-            const e = enemiesNext[i];
-            if (e.health <= 0) continue;
-            const r = getEnemyType(e.typeId).radius;
-            const def = getEnemyType(e.typeId);
-            if (hitTest(m.x, m.y, MISSILE_SIZE / 2, e.x, e.y, r)) {
-              enemiesNext[i] = { ...e, health: e.health - 1 };
-              if (enemiesNext[i].health <= 0) scoreDelta += def.points;
-              return false;
-            }
+      const prevMissiles = missilesRef.current;
+      let enemiesAfterHits = enemiesNext;
+      const movedMissiles = prevMissiles.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
+      const survivingMissiles = movedMissiles.filter((m) => {
+        for (let i = 0; i < enemiesAfterHits.length; i++) {
+          const e = enemiesAfterHits[i];
+          if (e.health <= 0) continue;
+          const r = getEnemyType(e.typeId).radius;
+          const def = getEnemyType(e.typeId);
+          if (hitTest(m.x, m.y, MISSILE_SIZE / 2, e.x, e.y, r)) {
+            const damaged = { ...e, health: e.health - 1 };
+            if (damaged.health <= 0) scoreDelta += def.points;
+            enemiesAfterHits = [
+              ...enemiesAfterHits.slice(0, i),
+              damaged,
+              ...enemiesAfterHits.slice(i + 1),
+            ];
+            return false;
           }
-          return m.x >= -20 && m.x <= width + 20 && m.y >= -20 && m.y <= height + 20;
-        });
-        if (scoreDelta) setScore((s) => s + scoreDelta);
-        missilesRef.current = survivors;
-        return survivors;
+        }
+        return m.x >= -20 && m.x <= width + 20 && m.y >= -20 && m.y <= height + 20;
       });
-      const aliveEnemies = enemiesNext.filter((e) => e.health > 0);
+      const aliveEnemies = enemiesAfterHits.filter((e) => e.health > 0);
+      if (scoreDelta) setScore((s) => s + scoreDelta);
+      setMissiles(survivingMissiles);
+      missilesRef.current = survivingMissiles;
       setEnemies(aliveEnemies);
       enemiesRef.current = aliveEnemies;
       rafId = requestAnimationFrame(tick);
