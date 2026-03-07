@@ -15,6 +15,7 @@ import {
   NativeTouchEvent,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
+import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
 
 // Retro 16-color EGA palette
 const PALETTE = {
@@ -43,7 +44,6 @@ const GUN_SPEED = 3; // steady speed, slower than missiles
 const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
-const MENU_BAR_HEIGHT = 48;
 const GAP_HEIGHT = GUN_SIZE * 2;
 const OBSTACLE_SIZE = 20;
 const OBSTACLE_HP = 10;
@@ -327,44 +327,45 @@ export default function Level1Screen() {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.menuBar}>
+    <ScreenLayout
+      containerStyle={{ backgroundColor: PALETTE.navy }}
+      menuBarStyle={{ backgroundColor: PALETTE.navy, borderBottomColor: PALETTE.cyan }}
+      menuLeft={
         <TouchableOpacity
           onPress={() => handleEndGame(score)}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          style={styles.closeButton}
         >
           <Text style={[styles.closeIcon, { fontFamily: 'PressStart2P_400Regular' }]}>✕</Text>
         </TouchableOpacity>
+      }
+      menuCenter={
         <Text style={[styles.levelText, { fontFamily: 'PressStart2P_400Regular' }]}>
           L-01
         </Text>
-        <View style={styles.menuRight}>
-          <Text
-            style={[
-              styles.scoreText,
-              { fontFamily: 'PressStart2P_400Regular' },
-            ]}
-          >
+      }
+      menuRight={
+        <>
+          <Text style={[styles.scoreText, { fontFamily: 'PressStart2P_400Regular' }]}>
             {String(score).padStart(5, '0')}
           </Text>
           <View style={styles.livesRow}>
-          {Array.from({ length: INITIAL_LIVES }).map((_, i) => (
-            <Text
-              key={i}
-              style={[
-                styles.lifeIcon,
-                i >= lives && styles.lifeLost,
-                { fontFamily: 'PressStart2P_400Regular' },
-              ]}
-            >
-              ●
-            </Text>
-          ))}
+            {Array.from({ length: INITIAL_LIVES }).map((_, i) => (
+              <Text
+                key={i}
+                style={[
+                  styles.lifeIcon,
+                  i >= lives && styles.lifeLost,
+                  { fontFamily: 'PressStart2P_400Regular' },
+                ]}
+              >
+                ●
+              </Text>
+            ))}
           </View>
-        </View>
-      </View>
-
+        </>
+      }
+      contentStyle={styles.level1Content}
+    >
       {!gameActive && (
         <View style={styles.gameOverOverlay}>
           <Text style={[styles.gameOverText, { fontFamily: 'PressStart2P_400Regular' }]}>
@@ -440,27 +441,14 @@ export default function Level1Screen() {
           ))}
         </Pressable>
       </View>
-    </View>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  level1Content: {
+    paddingHorizontal: 0,
     flex: 1,
-    backgroundColor: PALETTE.navy,
-  },
-  menuBar: {
-    height: MENU_BAR_HEIGHT,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    backgroundColor: PALETTE.navy,
-    borderBottomWidth: 2,
-    borderBottomColor: PALETTE.cyan,
-  },
-  closeButton: {
-    padding: 4,
   },
   closeIcon: {
     fontSize: 16,

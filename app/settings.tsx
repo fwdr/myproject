@@ -1,31 +1,41 @@
+import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { ScreenLayout } from '../components/ScreenLayout';
+import { useGame } from '../context/GameContext';
 
 let appVersion = '1.0.0';
 try {
   const v = require('../version.json');
   appVersion = v.display || `${v.version} (${v.build})`;
 } catch (_) {}
-import { useGame } from '../context/GameContext';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { soundEnabled, setSoundEnabled, resetHighScore } = useGame();
+  const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+
+  if (!fontsLoaded) return null;
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.closeButton}
-        onPress={() => router.back()}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Text style={styles.closeIcon}>✕</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.title}>Settings</Text>
-
+    <ScreenLayout
+      menuLeft={
+        <TouchableOpacity
+          onPress={() => router.back()}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Text style={[styles.closeIcon, { fontFamily: 'PressStart2P_400Regular' }]}>✕</Text>
+        </TouchableOpacity>
+      }
+      menuCenter={
+        <Text style={[styles.menuTitle, { fontFamily: 'PressStart2P_400Regular' }]}>
+          SETTINGS
+        </Text>
+      }
+      contentStyle={styles.content}
+    >
       <View style={styles.row}>
-        <Text style={styles.label}>Sound</Text>
+        <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Sound</Text>
         <Switch
           value={soundEnabled}
           onValueChange={setSoundEnabled}
@@ -35,43 +45,35 @@ export default function SettingsScreen() {
       </View>
 
       <TouchableOpacity style={styles.resetButton} onPress={resetHighScore}>
-        <Text style={styles.resetButtonText}>Reset High Score</Text>
+        <Text style={[styles.resetButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
+          Reset High Score
+        </Text>
       </TouchableOpacity>
 
-      <Text style={styles.hint}>
+      <Text style={[styles.hint, { fontFamily: 'PressStart2P_400Regular' }]}>
         Settings are saved automatically and persist between sessions.
       </Text>
 
-      <Text style={styles.version}>Version {appVersion}</Text>
-    </View>
+      <Text style={[styles.version, { fontFamily: 'PressStart2P_400Regular' }]}>
+        Version {appVersion}
+      </Text>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-    paddingTop: 60,
-    paddingHorizontal: 24,
+  content: {
+    paddingTop: 32,
   },
-  closeButton: {
-    position: 'absolute',
-    top: 50,
-    left: 24,
-    zIndex: 10,
-    padding: 4,
+  menuTitle: {
+    fontSize: 12,
+    color: '#00FFFF',
+    letterSpacing: 1,
   },
   closeIcon: {
-    fontSize: 24,
-    color: '#888',
-    fontWeight: '300',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#eee',
-    marginTop: 48,
-    marginBottom: 32,
+    fontSize: 16,
+    color: '#FFFF00',
+    letterSpacing: 1,
   },
   row: {
     flexDirection: 'row',
@@ -83,7 +85,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   label: {
-    fontSize: 18,
+    fontSize: 12,
     color: '#eee',
   },
   resetButton: {
@@ -96,19 +98,18 @@ const styles = StyleSheet.create({
     borderColor: '#ef4444',
   },
   resetButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     color: '#ef4444',
-    fontWeight: '600',
   },
   hint: {
     marginTop: 24,
-    fontSize: 14,
+    fontSize: 10,
     color: '#666',
-    lineHeight: 20,
+    lineHeight: 18,
   },
   version: {
     marginTop: 32,
-    fontSize: 14,
+    fontSize: 10,
     color: '#555',
   },
 });

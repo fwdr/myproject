@@ -1,6 +1,7 @@
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScreenLayout } from '../components/ScreenLayout';
 import { useGame } from '../context/GameContext';
 
 export default function HomeScreen() {
@@ -11,17 +12,32 @@ export default function HomeScreen() {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.highScoreLabel}>High Score</Text>
-        <Text style={styles.highScoreValue}>
-          {String(highScore).padStart(5, '0')}
+    <ScreenLayout
+      menuCenter={
+        <Text style={[styles.menuTitle, { fontFamily: 'PressStart2P_400Regular' }]}>
+          HOME
         </Text>
-      </View>
-
+      }
+      menuRight={
+        <>
+          <Text style={[styles.menuScore, { fontFamily: 'PressStart2P_400Regular' }]}>
+            {String(highScore).padStart(5, '0')}
+          </Text>
+          <TouchableOpacity
+            onPress={() => router.push('/settings')}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={styles.cogIcon}>⚙️</Text>
+          </TouchableOpacity>
+        </>
+      }
+      contentStyle={styles.content}
+    >
       <View style={styles.graphicContainer}>
         <View style={styles.graphicPlaceholder}>
-          <Text style={styles.graphicText}>Your graphic here</Text>
+          <Text style={[styles.graphicText, { fontFamily: 'PressStart2P_400Regular' }]}>
+            Your graphic here
+          </Text>
         </View>
       </View>
 
@@ -30,42 +46,17 @@ export default function HomeScreen() {
         onPress={() => router.push('/level1')}
         activeOpacity={0.8}
       >
-        <Text style={[styles.playButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>PLAY</Text>
+        <Text style={[styles.playButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
+          PLAY
+        </Text>
       </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.settingsButton}
-        onPress={() => router.push('/settings')}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Text style={styles.cogIcon}>⚙️</Text>
-      </TouchableOpacity>
-    </View>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1a1a2e',
-    paddingTop: 60,
-    paddingHorizontal: 24,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  highScoreLabel: {
-    fontSize: 10,
-    color: '#888',
-    letterSpacing: 2,
-    fontFamily: 'PressStart2P_400Regular',
-  },
-  highScoreValue: {
-    fontSize: 24,
-    color: '#f0c14b',
-    letterSpacing: 2,
-    fontFamily: 'PressStart2P_400Regular',
+  content: {
+    paddingTop: 24,
   },
   graphicContainer: {
     flex: 1,
@@ -88,7 +79,6 @@ const styles = StyleSheet.create({
   graphicText: {
     fontSize: 10,
     color: '#666',
-    fontFamily: 'PressStart2P_400Regular',
     letterSpacing: 1,
   },
   playButton: {
@@ -105,13 +95,17 @@ const styles = StyleSheet.create({
     color: '#1a1a2e',
     letterSpacing: 2,
   },
-  settingsButton: {
-    position: 'absolute',
-    top: 56,
-    right: 24,
-    padding: 8,
+  menuTitle: {
+    fontSize: 12,
+    color: '#00FFFF',
+    letterSpacing: 1,
+  },
+  menuScore: {
+    fontSize: 12,
+    color: '#f0c14b',
+    letterSpacing: 2,
   },
   cogIcon: {
-    fontSize: 28,
+    fontSize: 24,
   },
 });
