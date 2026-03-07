@@ -22,6 +22,7 @@ export type PowerupConfig = {
 export type LevelConfig = {
   id: string;
   waves: WaveSpawn[][];
+  waveTimeoutMs?: number;
   staticObstacles?: StaticObstacle[];
   tunnel?: TunnelType;
   spawnOrigin?: SpawnOriginType;
@@ -31,6 +32,7 @@ export type LevelConfig = {
 export const LEVEL_1: LevelConfig = {
   id: 'level1',
   tunnel: 'none',
+  waveTimeoutMs: 7000,
   waves: [
     [{ enemyType: 'type1', count: 1 }],
     [{ enemyType: 'type1', count: 1 }],

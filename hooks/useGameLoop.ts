@@ -224,7 +224,8 @@ export function useGameLoop(
       const idx = currentWaveIndexRef.current;
       if (idx < waves.length) {
         const elapsed = Date.now() - levelStartTimeRef.current;
-        const timeBasedWave = Math.floor(elapsed / WAVE_TIMEOUT_MS);
+        const waveTimeoutMs = config.waveTimeoutMs ?? WAVE_TIMEOUT_MS;
+        const timeBasedWave = Math.floor(elapsed / waveTimeoutMs);
         const targetWave = Math.min(timeBasedWave, waves.length - 1);
         if (idx < targetWave) {
           setCurrentWaveIndex((i) => i + 1);
