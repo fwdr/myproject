@@ -139,7 +139,7 @@ export default function Level2Screen() {
 
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   useEffect(() => {
-    const sub = Dimensions.addEventListener('change', ({ window }) => setDimensions(window));
+    const sub = Dimensions.addEventListener('change', (e) => setDimensions(e.window));
     return () => sub?.remove();
   }, []);
   const playAreaHeight = dimensions.height - MENU_BAR_HEIGHT;
