@@ -303,7 +303,7 @@ export function useGameLoop(
               const newLives = Math.max(0, livesRef.current - 1);
               livesRef.current = newLives;
               setLives(newLives);
-              if (newLives <= 0) (window as unknown as { setGameActive?: (v: boolean) => void }).setGameActive?.(false);
+              if (newLives <= 0) onGameOver();
               setGun(null);
               gunRef.current = null;
               if (newLives > 0) {
