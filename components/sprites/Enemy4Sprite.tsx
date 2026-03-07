@@ -5,15 +5,14 @@ import { View, StyleSheet } from 'react-native';
 const PALETTE = {
   magenta: '#FF00FF',
   purple: '#800080',
-  cyan: '#00FFFF',
   white: '#FFFFFF',
 };
 
 const SIZE = 24;
 
 /**
- * Enemy type 4 sprite: lightweight scout/drone, 1 HP.
- * Small angular shape with sensor eye.
+ * Enemy type 4 sprite: small bat-like creature, 1 HP.
+ * Tiny body, big eyes, wing ears.
  */
 export function Enemy4Sprite({ x, y }: { x: number; y: number }) {
   return (
@@ -28,9 +27,15 @@ export function Enemy4Sprite({ x, y }: { x: number; y: number }) {
       pointerEvents="none"
     >
       <View style={styles.body} />
-      <View style={styles.sensor} />
-      <View style={[styles.wing, styles.wingLeft]} />
-      <View style={[styles.wing, styles.wingRight]} />
+      <View style={[styles.ear, styles.earLeft]} />
+      <View style={[styles.ear, styles.earRight]} />
+      <View style={[styles.eye, styles.eyeLeft]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={[styles.eye, styles.eyeRight]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={styles.mouth} />
     </View>
   );
 }
@@ -49,34 +54,53 @@ const styles = StyleSheet.create({
     backgroundColor: PALETTE.magenta,
     borderWidth: 1,
     borderColor: PALETTE.purple,
-    transform: [{ rotate: '45deg' }],
+    borderRadius: 8,
   },
-  sensor: {
+  ear: {
     position: 'absolute',
-    width: 4,
-    height: 4,
-    top: 2,
-    borderRadius: 2,
-    backgroundColor: PALETTE.cyan,
-    borderWidth: 1,
-    borderColor: PALETTE.white,
-  },
-  wing: {
-    position: 'absolute',
-    width: 6,
-    height: 3,
+    width: 5,
+    height: 8,
     backgroundColor: PALETTE.purple,
     borderWidth: 1,
     borderColor: PALETTE.magenta,
+    top: -1,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
   },
-  wingLeft: {
+  earLeft: {
     left: 2,
-    bottom: 6,
     transform: [{ rotate: '-25deg' }],
   },
-  wingRight: {
+  earRight: {
     right: 2,
-    bottom: 6,
     transform: [{ rotate: '25deg' }],
+  },
+  eye: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: PALETTE.white,
+    borderWidth: 1,
+    borderColor: PALETTE.purple,
+    top: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyeLeft: { left: 3 },
+  eyeRight: { right: 3 },
+  pupil: {
+    width: 2,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: PALETTE.purple,
+  },
+  mouth: {
+    position: 'absolute',
+    bottom: 5,
+    width: 4,
+    height: 1,
+    backgroundColor: PALETTE.purple,
+    borderRadius: 1,
   },
 });

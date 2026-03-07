@@ -11,7 +11,7 @@ const PALETTE = {
 const SIZE = 24;
 
 /**
- * Enemy type 3 sprite: heavy armored tank, bulkier design.
+ * Enemy type 3 sprite: heavy armored creature - bulky, horned, big eyes.
  */
 export function Enemy3Sprite({ x, y }: { x: number; y: number }) {
   return (
@@ -26,11 +26,16 @@ export function Enemy3Sprite({ x, y }: { x: number; y: number }) {
       pointerEvents="none"
     >
       <View style={styles.body} />
-      <View style={styles.armorPlate} />
-      <View style={[styles.tread, styles.treadLeft]} />
-      <View style={[styles.tread, styles.treadRight]} />
-      <View style={styles.turret} />
-      <View style={styles.barrel} />
+      <View style={[styles.horn, styles.hornLeft]} />
+      <View style={[styles.horn, styles.hornRight]} />
+      <View style={[styles.eye, styles.eyeLeft]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={[styles.eye, styles.eyeRight]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={styles.brow} />
+      <View style={styles.mouth} />
     </View>
   );
 }
@@ -44,49 +49,66 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: {
-    width: 22,
-    height: 16,
+    width: 20,
+    height: 18,
     backgroundColor: PALETTE.olive,
     borderWidth: 2,
     borderColor: PALETTE.yellow,
+    borderRadius: 8,
   },
-  armorPlate: {
+  horn: {
     position: 'absolute',
-    width: 18,
-    height: 6,
-    top: 4,
+    width: 4,
+    height: 8,
     backgroundColor: PALETTE.yellow,
     borderWidth: 1,
     borderColor: PALETTE.olive,
+    top: -2,
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
   },
-  tread: {
+  hornLeft: {
+    left: 4,
+    transform: [{ rotate: '-15deg' }],
+  },
+  hornRight: {
+    right: 4,
+    transform: [{ rotate: '15deg' }],
+  },
+  eye: {
     position: 'absolute',
-    width: 5,
-    height: 18,
-    bottom: 0,
-    backgroundColor: PALETTE.olive,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: PALETTE.white,
     borderWidth: 1,
-    borderColor: PALETTE.yellow,
-    borderRadius: 2,
+    borderColor: PALETTE.olive,
+    top: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  treadLeft: { left: 1 },
-  treadRight: { right: 1 },
-  turret: {
+  eyeLeft: { left: 3 },
+  eyeRight: { right: 3 },
+  pupil: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: PALETTE.olive,
+  },
+  brow: {
     position: 'absolute',
     width: 14,
-    height: 12,
-    top: -2,
+    height: 2,
+    top: 1,
     backgroundColor: PALETTE.olive,
-    borderWidth: 2,
-    borderColor: PALETTE.yellow,
+    borderRadius: 1,
   },
-  barrel: {
+  mouth: {
     position: 'absolute',
-    width: 6,
-    height: 8,
-    top: -7,
-    backgroundColor: PALETTE.yellow,
-    borderWidth: 1,
-    borderColor: PALETTE.olive,
+    bottom: 4,
+    width: 8,
+    height: 3,
+    backgroundColor: PALETTE.olive,
+    borderRadius: 1,
   },
 });

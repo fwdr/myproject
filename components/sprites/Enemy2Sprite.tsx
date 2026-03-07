@@ -12,7 +12,7 @@ const PALETTE = {
 const SIZE = 24;
 
 /**
- * Enemy type 2 sprite: tank/drone with treads and turret.
+ * Enemy type 2 sprite: squid-like creature with tentacles and big eyes.
  */
 export function Enemy2Sprite({ x, y }: { x: number; y: number }) {
   return (
@@ -27,10 +27,15 @@ export function Enemy2Sprite({ x, y }: { x: number; y: number }) {
       pointerEvents="none"
     >
       <View style={styles.body} />
-      <View style={[styles.tread, styles.treadLeft]} />
-      <View style={[styles.tread, styles.treadRight]} />
-      <View style={styles.turret} />
-      <View style={styles.cannon} />
+      <View style={[styles.tentacle, styles.tentacleLeft]} />
+      <View style={[styles.tentacle, styles.tentacleRight]} />
+      <View style={[styles.eye, styles.eyeLeft]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={[styles.eye, styles.eyeRight]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={styles.mouth} />
     </View>
   );
 }
@@ -44,43 +49,51 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: {
-    width: 20,
-    height: 14,
+    width: 18,
+    height: 16,
     backgroundColor: PALETTE.magenta,
     borderWidth: 2,
     borderColor: PALETTE.purple,
+    borderRadius: 10,
   },
-  tread: {
+  tentacle: {
     position: 'absolute',
-    width: 4,
-    height: 16,
+    width: 3,
+    height: 8,
     backgroundColor: PALETTE.purple,
     borderWidth: 1,
     borderColor: PALETTE.cyan,
+    bottom: -4,
+    borderRadius: 2,
+  },
+  tentacleLeft: { left: 6 },
+  tentacleRight: { right: 6 },
+  eye: {
+    position: 'absolute',
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: PALETTE.white,
+    borderWidth: 1,
+    borderColor: PALETTE.purple,
+    top: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  eyeLeft: { left: 3 },
+  eyeRight: { right: 3 },
+  pupil: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: PALETTE.purple,
+  },
+  mouth: {
+    position: 'absolute',
+    bottom: 4,
+    width: 6,
+    height: 2,
+    backgroundColor: PALETTE.purple,
     borderRadius: 1,
-  },
-  treadLeft: {
-    left: 2,
-  },
-  treadRight: {
-    right: 2,
-  },
-  turret: {
-    position: 'absolute',
-    width: 12,
-    height: 10,
-    top: 0,
-    backgroundColor: PALETTE.purple,
-    borderWidth: 1,
-    borderColor: PALETTE.cyan,
-  },
-  cannon: {
-    position: 'absolute',
-    width: 4,
-    height: 6,
-    top: -5,
-    backgroundColor: PALETTE.cyan,
-    borderWidth: 1,
-    borderColor: PALETTE.white,
   },
 });
