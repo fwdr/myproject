@@ -147,6 +147,7 @@ export default function Level2Screen() {
   const enemiesRef = useRef<Enemy[]>([]);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   const livesRef = useRef(INITIAL_LIVES);
+  const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
 
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
@@ -219,6 +220,7 @@ export default function Level2Screen() {
     const g: Gun = { x, y, rotation, vx: 0, vy: 0 };
     setGun(g);
     gunRef.current = g;
+    gunTargetRef.current = { x, y };
   }, [innerWidth, innerHeight]);
 
   const hitTest = useCallback((ax: number, ay: number, ar: number, bx: number, by: number, br: number) => {
@@ -279,14 +281,17 @@ export default function Level2Screen() {
       const { width, height } = dimensionsRef.current;
       const g = gunRef.current;
 
-      // Move enemies towards the gun
+      // Update target: use gun position when available, else keep last known
+      const target = g ? { x: g.x, y: g.y } : gunTargetRef.current;
+      if (g) gunTargetRef.current = { x: g.x, y: g.y };
+
+      // Move enemies towards the target (always, even when gun is respawning)
       let enemiesNext = enemiesRef.current.map((e) => {
         if (e.health <= 0) return e;
-        if (!g) return e;
-        const dx = g.x - e.x;
-        const dy = g.y - e.y;
+        const dx = target.x - e.x;
+        const dy = target.y - e.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 1) return e;
+        if (dist < 0.01) return e;
         const vx = (dx / dist) * ENEMY_SPEED;
         const vy = (dy / dist) * ENEMY_SPEED;
         const r = getEnemyType(e.typeId).radius;
