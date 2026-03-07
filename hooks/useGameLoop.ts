@@ -149,7 +149,7 @@ export function useGameLoop(
         });
       }
     }
-    setEnemies(newEnemies);
+    setEnemies((prev) => [...prev, ...newEnemies]);
   }, [innerWidth, innerHeight, currentWaveIndex, config.waves, config.spawnOrigin, levelComplete]);
 
   // Wave timeout: advance after 10 sec if not already advanced by wave completion
