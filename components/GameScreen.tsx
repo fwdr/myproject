@@ -16,6 +16,7 @@ import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
 import { PowerupSprite } from './sprites/PowerupSprite';
 import { Powerup2Sprite } from './sprites/Powerup2Sprite';
+import { GunSprite } from './sprites/GunSprite';
 import {
   GUN_SIZE,
   MISSILE_SIZE,
@@ -208,7 +209,9 @@ export function GameScreen({
                   transform: [{ rotate: `${gun.rotation}deg` }],
                 },
               ]}
-            />
+            >
+              <GunSprite />
+            </View>
           )}
           {enemies.map((e) => {
             const def = getEnemyType(e.typeId);
@@ -308,12 +311,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: GUN_SIZE,
     height: GUN_SIZE,
-    borderLeftWidth: GUN_SIZE / 2,
-    borderRightWidth: GUN_SIZE / 2,
-    borderBottomWidth: GUN_SIZE,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: PALETTE.lime,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   obstacle: {
     position: 'absolute',

@@ -177,7 +177,7 @@ export default function SettingsScreen() {
         onPress={() => setSpriteGalleryVisible(true)}
       >
         <Text style={[styles.spriteButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-          Show Sprites
+          Sprite Gallery
         </Text>
       </TouchableOpacity>
 
