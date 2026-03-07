@@ -55,6 +55,10 @@ export function useGameLoop(
   const enemyIdRef = useRef(0);
   const powerupIdRef = useRef(0);
   const prevEnemiesCountRef = useRef(0);
+  const onLevelCompleteRef = useRef(onLevelComplete);
+  const currentWaveIndexRef = useRef(currentWaveIndex);
+  onLevelCompleteRef.current = onLevelComplete;
+  currentWaveIndexRef.current = currentWaveIndex;
 
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
 
@@ -158,14 +162,15 @@ export function useGameLoop(
     const waves = config.waves;
     if (currentWaveIndex >= waves.length) return;
     const id = setTimeout(() => {
-      if (currentWaveIndex < waves.length - 1) {
+      const idx = currentWaveIndexRef.current;
+      if (idx < waves.length - 1) {
         setCurrentWaveIndex((i) => i + 1);
       } else {
-        onLevelComplete();
+        onLevelCompleteRef.current();
       }
     }, WAVE_TIMEOUT_MS);
     return () => clearTimeout(id);
-  }, [currentWaveIndex, config.waves, levelComplete, gameActive, onLevelComplete]);
+  }, [currentWaveIndex, config.waves, levelComplete, gameActive]);
 
   // Wave advance (on wave completion)
   useEffect(() => {
@@ -376,7 +381,7 @@ export function useGameLoop(
       missilesRef.current = survivingMissiles;
       if (prevMissiles.length > 0 || enemiesNext.length > 0) {
         setEnemies((prev) => {
-          const processedIds = new Set(aliveEnemies.map((e) => e.id));
+          const processedIds = new Set(enemiesNext.map((e) => e.id));
           const newlySpawned = prev.filter((e) => !processedIds.has(e.id));
           const merged = [...aliveEnemies, ...newlySpawned];
           enemiesRef.current = merged;
