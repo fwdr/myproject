@@ -12,8 +12,7 @@ const PALETTE = {
 const SIZE = 24;
 
 /**
- * Enemy type 2 sprite: a retro hexagonal/tank-like enemy.
- * Hexagon body, cyan accents, EGA style.
+ * Enemy type 2 sprite: tank/drone with treads and turret.
  */
 export function Enemy2Sprite({ x, y }: { x: number; y: number }) {
   return (
@@ -27,10 +26,11 @@ export function Enemy2Sprite({ x, y }: { x: number; y: number }) {
       ]}
       pointerEvents="none"
     >
-      {/* Body - hexagon via rotated square with clipped corners */}
       <View style={styles.body} />
-      {/* Core / turret */}
-      <View style={styles.core} />
+      <View style={[styles.tread, styles.treadLeft]} />
+      <View style={[styles.tread, styles.treadRight]} />
+      <View style={styles.turret} />
+      <View style={styles.cannon} />
     </View>
   );
 }
@@ -44,18 +44,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: {
-    width: 22,
-    height: 22,
+    width: 20,
+    height: 14,
     backgroundColor: PALETTE.magenta,
     borderWidth: 2,
     borderColor: PALETTE.purple,
-    transform: [{ rotate: '45deg' }],
   },
-  core: {
+  tread: {
     position: 'absolute',
-    width: 10,
+    width: 4,
+    height: 16,
+    backgroundColor: PALETTE.purple,
+    borderWidth: 1,
+    borderColor: PALETTE.cyan,
+    borderRadius: 1,
+  },
+  treadLeft: {
+    left: 2,
+  },
+  treadRight: {
+    right: 2,
+  },
+  turret: {
+    position: 'absolute',
+    width: 12,
     height: 10,
-    borderRadius: 5,
+    top: 0,
+    backgroundColor: PALETTE.purple,
+    borderWidth: 1,
+    borderColor: PALETTE.cyan,
+  },
+  cannon: {
+    position: 'absolute',
+    width: 4,
+    height: 6,
+    top: -5,
     backgroundColor: PALETTE.cyan,
     borderWidth: 1,
     borderColor: PALETTE.white,

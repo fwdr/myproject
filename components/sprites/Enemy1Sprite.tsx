@@ -12,8 +12,8 @@ const PALETTE = {
 const SIZE = 24;
 
 /**
- * Enemy type 1 sprite: a retro "blob" / bug-like enemy.
- * Diamond body with eyes, EGA style.
+ * Enemy type 1 sprite: bug-like space invader.
+ * Diamond body, antennae, big eyes with pupils.
  */
 export function Enemy1Sprite({ x, y }: { x: number; y: number }) {
   return (
@@ -27,11 +27,16 @@ export function Enemy1Sprite({ x, y }: { x: number; y: number }) {
       ]}
       pointerEvents="none"
     >
-      {/* Body - diamond/octagon shape */}
       <View style={styles.body} />
-      {/* Eyes */}
-      <View style={[styles.eye, styles.eyeLeft]} />
-      <View style={[styles.eye, styles.eyeRight]} />
+      <View style={[styles.antenna, styles.antennaLeft]} />
+      <View style={[styles.antenna, styles.antennaRight]} />
+      <View style={[styles.eye, styles.eyeLeft]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={[styles.eye, styles.eyeRight]}>
+        <View style={styles.pupil} />
+      </View>
+      <View style={styles.mouth} />
     </View>
   );
 }
@@ -45,27 +50,54 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   body: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     backgroundColor: PALETTE.red,
     borderWidth: 2,
     borderColor: PALETTE.maroon,
     transform: [{ rotate: '45deg' }],
   },
+  antenna: {
+    position: 'absolute',
+    width: 2,
+    height: 6,
+    backgroundColor: PALETTE.maroon,
+    top: -2,
+  },
+  antennaLeft: {
+    left: 6,
+    transform: [{ rotate: '-20deg' }],
+  },
+  antennaRight: {
+    right: 6,
+    transform: [{ rotate: '20deg' }],
+  },
   eye: {
     position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: PALETTE.white,
     borderWidth: 1,
     borderColor: PALETTE.maroon,
-    top: 4,
+    top: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  eyeLeft: {
-    left: 2,
+  eyeLeft: { left: 2 },
+  eyeRight: { right: 2 },
+  pupil: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: PALETTE.maroon,
   },
-  eyeRight: {
-    right: 2,
+  mouth: {
+    position: 'absolute',
+    bottom: 4,
+    width: 6,
+    height: 2,
+    backgroundColor: PALETTE.maroon,
+    borderRadius: 1,
   },
 });
