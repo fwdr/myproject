@@ -369,6 +369,8 @@ export function useGameLoop(
   }, [gameActive, levelComplete, fontsLoaded, hitTest, tunnelType, hasObstacles, powerupConfig, onGameOver]);
 
   const [gameAreaLayout, setGameAreaLayout] = useState({ x: 0, y: 0 });
+  const gameAreaLayoutRef = useRef({ x: 0, y: 0 });
+  gameAreaLayoutRef.current = gameAreaLayout;
 
   const handleTap = useCallback(
     (e: NativeSyntheticEvent<NativeTouchEvent>) => {
@@ -376,12 +378,13 @@ export function useGameLoop(
       if (!g) return;
       const ne = e.nativeEvent as NativeTouchEvent & { pageX?: number; pageY?: number };
       let tapX: number, tapY: number;
-      if (typeof ne.locationX === 'number' && typeof ne.locationY === 'number') {
+      const layout = gameAreaLayoutRef.current;
+      if (typeof ne.pageX === 'number' && typeof ne.pageY === 'number') {
+        tapX = ne.pageX - layout.x;
+        tapY = ne.pageY - layout.y;
+      } else if (typeof ne.locationX === 'number' && typeof ne.locationY === 'number') {
         tapX = ne.locationX;
         tapY = ne.locationY;
-      } else if (typeof ne.pageX === 'number' && typeof ne.pageY === 'number') {
-        tapX = ne.pageX - gameAreaLayout.x;
-        tapY = ne.pageY - gameAreaLayout.y;
       } else return;
       const dx = tapX - g.x;
       const dy = tapY - g.y;
@@ -389,8 +392,10 @@ export function useGameLoop(
       if (distance < GUN_SIZE) return;
       const rotation = (Math.atan2(dx, -dy) * 180) / Math.PI;
       const invD = 1 / distance;
-      const vx = GUN_SPEED * dx * invD;
-      const vy = GUN_SPEED * dy * invD;
+      const minDim = Math.min(innerWidth, innerHeight);
+      const gunSpeed = GUN_SPEED * Math.min(1, minDim / 450);
+      const vx = gunSpeed * dx * invD;
+      const vy = gunSpeed * dy * invD;
       gunRef.current = { ...g, rotation, vx, vy };
       setGun({ ...g, rotation, vx, vy });
       const mdx = dx * invD * MISSILE_SPEED;
@@ -433,7 +438,7 @@ export function useGameLoop(
         });
       }
     },
-    [gameAreaLayout.x, gameAreaLayout.y, powerupConfig]
+    [powerupConfig, innerWidth, innerHeight]
   );
 
   return {

@@ -1,6 +1,6 @@
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -61,6 +61,7 @@ export function GameScreen({
 
   const [gameActive, setGameActive] = useState(true);
   const [levelComplete, setLevelComplete] = useState(false);
+  const playAreaRef = useRef<View>(null);
 
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
@@ -186,11 +187,13 @@ export function GameScreen({
           brickStyle={brickStyle}
         />
         <Pressable
+          ref={playAreaRef}
           style={[styles.playArea, { width: innerWidth, height: innerHeight }]}
           onPress={handleTap}
-          onLayout={(e) => {
-            const { layout } = e.nativeEvent;
-            setGameAreaLayout({ x: layout.x, y: layout.y });
+          onLayout={() => {
+            playAreaRef.current?.measureInWindow((x, y) => {
+              setGameAreaLayout({ x, y });
+            });
           }}
         >
           {gun && (
