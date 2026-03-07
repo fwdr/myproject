@@ -202,10 +202,12 @@ export default function Level2Screen() {
       if (side === 2) return { x: margin + Math.random() * (w - margin * 2), y: h };
       return { x: 0, y: margin + Math.random() * (h - margin * 2) };
     };
+    const spawnOrigin = LEVEL_2.spawnOrigin ?? 'scattered';
+    const waveOrigin = spawnOrigin === 'grouped' ? spawnAtEdge() : null;
     for (const spawn of wave) {
       const def = getEnemyType(spawn.enemyType);
       for (let i = 0; i < spawn.count; i++) {
-        const { x, y } = spawnAtEdge();
+        const { x, y } = waveOrigin ?? spawnAtEdge();
         newEnemies.push({
           id: ++enemyId,
           typeId: spawn.enemyType,
