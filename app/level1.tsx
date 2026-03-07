@@ -16,6 +16,9 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
+import { LEVEL_1 } from '../config/levels/level1';
+import { getEnemyType } from '../config/enemyTypes';
+import type { EnemyTypeId } from '../config/enemyTypes';
 
 // Retro 16-color EGA palette
 const PALETTE = {
@@ -45,17 +48,14 @@ const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
 const GAP_HEIGHT = GUN_SIZE * 2;
-const OBSTACLE_SIZE = 20;
-const OBSTACLE_HP = 10;
-const OBSTACLE_POINTS = 10;
 const INITIAL_LIVES = 3;
 const GUN_RADIUS = GUN_SIZE / 2;
-const OBSTACLE_RADIUS = OBSTACLE_SIZE / 2;
 let missileId = 0;
+let enemyId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
-type Obstacle = { id: number; x: number; y: number; health: number };
+type Enemy = { id: number; typeId: EnemyTypeId; x: number; y: number; health: number };
 
 function BrickWall({
   width,
@@ -133,32 +133,70 @@ export default function Level1Screen() {
   const innerHeight = playAreaHeight - 2 * BRICK_H;
   const [gun, setGun] = useState<Gun | null>(null);
   const [missiles, setMissiles] = useState<Missile[]>([]);
-  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
+  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [currentWaveIndex, setCurrentWaveIndex] = useState(0);
+  const [levelComplete, setLevelComplete] = useState(false);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [gameActive, setGameActive] = useState(true);
   const gunRef = useRef<Gun | null>(null);
   const missilesRef = useRef<Missile[]>([]);
-  const obstaclesRef = useRef<Obstacle[]>([]);
+  const enemiesRef = useRef<Enemy[]>([]);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   const livesRef = useRef(INITIAL_LIVES);
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
 
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
+  // Spawn current wave when dimensions ready
   useEffect(() => {
     const w = innerWidth;
     const h = innerHeight;
-    setObstacles([
-      { id: 1, x: w * 0.25, y: h * 0.3, health: OBSTACLE_HP },
-      { id: 2, x: w * 0.5, y: h * 0.6, health: OBSTACLE_HP },
-      { id: 3, x: w * 0.75, y: h * 0.3, health: OBSTACLE_HP },
-    ]);
-  }, [innerWidth, innerHeight]);
+    if (w <= 0 || h <= 0) return;
+    const waves = LEVEL_1.waves;
+    if (currentWaveIndex >= waves.length) return;
+
+    const wave = waves[currentWaveIndex];
+    const newEnemies: Enemy[] = [];
+    const padding = GUN_SIZE + 20;
+    for (const spawn of wave) {
+      const def = getEnemyType(spawn.enemyType);
+      for (let i = 0; i < spawn.count; i++) {
+        const x = padding + Math.random() * (w - padding * 2);
+        const y = padding + Math.random() * (h - padding * 2);
+        newEnemies.push({
+          id: ++enemyId,
+          typeId: spawn.enemyType,
+          x,
+          y,
+          health: def.health,
+        });
+      }
+    }
+    setEnemies(newEnemies);
+  }, [innerWidth, innerHeight, currentWaveIndex]);
+
+  const prevEnemiesCountRef = useRef(0);
+
+  // When all enemies destroyed (wave cleared): advance wave or level complete
+  useEffect(() => {
+    const wasEmpty = prevEnemiesCountRef.current === 0;
+    const nowEmpty = enemies.length === 0;
+    prevEnemiesCountRef.current = enemies.length;
+
+    if (!wasEmpty && nowEmpty) {
+      const waves = LEVEL_1.waves;
+      if (currentWaveIndex < waves.length - 1) {
+        setCurrentWaveIndex((i) => i + 1);
+      } else {
+        setLevelComplete(true);
+      }
+    }
+  }, [enemies.length, currentWaveIndex]);
 
   useEffect(() => {
-    obstaclesRef.current = obstacles;
-  }, [obstacles]);
+    enemiesRef.current = enemies;
+  }, [enemies]);
 
   useEffect(() => {
     livesRef.current = lives;
@@ -229,11 +267,11 @@ export default function Level1Screen() {
   );
 
   useEffect(() => {
-    if (!gameActive || !fontsLoaded) return;
+    if (!gameActive || levelComplete || !fontsLoaded) return;
     let rafId: number;
     const tick = () => {
       const { width, height } = dimensionsRef.current;
-      const obs = obstaclesRef.current;
+      const obs = enemiesRef.current;
       const g = gunRef.current;
 
       if (g) {
@@ -259,11 +297,12 @@ export default function Level1Screen() {
           else { x = width - pad; nextVx = 0; }
         }
 
-        let hitObstacle = false;
-        for (const o of obs) {
-          if (o.health <= 0) continue;
-          if (hitTest(x, y, GUN_RADIUS, o.x, o.y, OBSTACLE_RADIUS)) {
-            hitObstacle = true;
+        let hitEnemy = false;
+        for (const e of obs) {
+          if (e.health <= 0) continue;
+          const r = getEnemyType(e.typeId).radius;
+          if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
+            hitEnemy = true;
             const newLives = Math.max(0, livesRef.current - 1);
             livesRef.current = newLives;
             setLives(newLives);
@@ -283,32 +322,34 @@ export default function Level1Screen() {
             break;
           }
         }
-        if (!hitObstacle) {
+        if (!hitEnemy) {
           const nextGun: Gun = { ...g, x, y, vx: nextVx, vy };
           gunRef.current = nextGun;
           setGun(nextGun);
         }
       }
 
-      let obsNext = [...obstaclesRef.current];
+      let enemiesNext = [...enemiesRef.current];
       let scoreDelta = 0;
       setMissiles((prev) => {
         if (prev.length === 0) return prev;
         const moved = prev.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
         const survivors = moved.filter((m) => {
-          for (let i = 0; i < obsNext.length; i++) {
-            const o = obsNext[i];
-            if (o.health <= 0) continue;
-            if (hitTest(m.x, m.y, MISSILE_SIZE / 2, o.x, o.y, OBSTACLE_RADIUS)) {
-              obsNext[i] = { ...o, health: o.health - 1 };
-              if (obsNext[i].health <= 0) scoreDelta += OBSTACLE_POINTS;
+          for (let i = 0; i < enemiesNext.length; i++) {
+            const e = enemiesNext[i];
+            if (e.health <= 0) continue;
+            const r = getEnemyType(e.typeId).radius;
+            const def = getEnemyType(e.typeId);
+            if (hitTest(m.x, m.y, MISSILE_SIZE / 2, e.x, e.y, r)) {
+              enemiesNext[i] = { ...e, health: e.health - 1 };
+              if (enemiesNext[i].health <= 0) scoreDelta += def.points;
               return false;
             }
           }
           return m.x >= -20 && m.x <= width + 20 && m.y >= -20 && m.y <= height + 20;
         });
-        setObstacles(obsNext.filter((o) => o.health > 0));
-        obstaclesRef.current = obsNext.filter((o) => o.health > 0);
+        setEnemies(enemiesNext.filter((e) => e.health > 0));
+        enemiesRef.current = enemiesNext.filter((e) => e.health > 0);
         if (scoreDelta) setScore((s) => s + scoreDelta);
         missilesRef.current = survivors;
         return survivors;
@@ -317,7 +358,7 @@ export default function Level1Screen() {
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [gameActive, fontsLoaded, hitTest]);
+  }, [gameActive, levelComplete, fontsLoaded, hitTest]);
 
   const handleEndGame = (finalScore: number) => {
     setHighScore((prev) => Math.max(prev, finalScore));
@@ -385,6 +426,25 @@ export default function Level1Screen() {
         </View>
       )}
 
+      {levelComplete && (
+        <View style={styles.gameOverOverlay}>
+          <Text style={[styles.levelCompleteText, { fontFamily: 'PressStart2P_400Regular' }]}>
+            LEVEL COMPLETE
+          </Text>
+          <Text style={[styles.gameOverScore, { fontFamily: 'PressStart2P_400Regular' }]}>
+            {String(score).padStart(5, '0')}
+          </Text>
+          <TouchableOpacity
+            style={styles.gameOverButton}
+            onPress={() => handleEndGame(score)}
+          >
+            <Text style={[styles.gameOverButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
+              EXIT
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
         <BrickWall
           width={dimensions.width}
@@ -415,18 +475,11 @@ export default function Level1Screen() {
               ]}
             />
           )}
-          {obstacles.map((o) => (
-            <View
-              key={o.id}
-              style={[
-                styles.obstacle,
-                {
-                  left: o.x - OBSTACLE_SIZE / 2,
-                  top: o.y - OBSTACLE_SIZE / 2,
-                },
-              ]}
-            />
-          ))}
+          {enemies.map((e) => {
+            const def = getEnemyType(e.typeId);
+            const Sprite = def.Sprite;
+            return <Sprite key={e.id} x={e.x} y={e.y} />;
+          })}
           {missiles.map((m) => (
             <View
               key={m.id}
