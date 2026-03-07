@@ -6,5 +6,7 @@ export const LEVEL_4: LevelConfig = {
   spawnOrigin: 'grouped',
   waves: [
     [{ enemyType: 'type4', count: 3, spawnDelayMs: 2000 }],
+    [{ enemyType: 'type4', count: 3, spawnDelayMs: 2000 }],
+    [{ enemyType: 'type4', count: 3, spawnDelayMs: 2000 }],
   ],
 };

@@ -24,7 +24,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type2: {
     id: 'type2',
-    health: 3,
+    health: 5,
     points: 15,
     radius: 12,
     Sprite: Enemy2Sprite,

@@ -9,5 +9,7 @@ export const LEVEL_2: LevelConfig = {
   ],
   waves: [
     [{ enemyType: 'type2', count: 1 }],
+    [{ enemyType: 'type2', count: 1 }],
+    [{ enemyType: 'type2', count: 1 }],
   ],
 };

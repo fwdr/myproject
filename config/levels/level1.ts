@@ -26,5 +26,9 @@ export const LEVEL_1: LevelConfig = {
   tunnel: 'none',
   waves: [
     [{ enemyType: 'type1', count: 1 }],
+    [{ enemyType: 'type1', count: 1 }],
+    [{ enemyType: 'type1', count: 1 }],
+    [{ enemyType: 'type1', count: 1 }],
+    [{ enemyType: 'type1', count: 1 }],
   ],
 };
