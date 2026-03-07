@@ -389,8 +389,10 @@ export default function Level1Screen() {
       if (scoreDelta) setScore((s) => s + scoreDelta);
       setMissiles(survivingMissiles);
       missilesRef.current = survivingMissiles;
-      setEnemies(aliveEnemies);
-      enemiesRef.current = aliveEnemies;
+      if (prevMissiles.length > 0 || enemiesNext.length > 0) {
+        setEnemies(aliveEnemies);
+        enemiesRef.current = aliveEnemies;
+      }
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);

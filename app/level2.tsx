@@ -131,6 +131,10 @@ export default function Level2Screen() {
   const { setHighScore } = useGame();
 
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', ({ window }) => setDimensions(window));
+    return () => sub?.remove();
+  }, []);
   const playAreaHeight = dimensions.height - MENU_BAR_HEIGHT;
   const innerWidth = dimensions.width - 2 * BRICK_W;
   const innerHeight = playAreaHeight - 2 * BRICK_H;
@@ -388,8 +392,10 @@ export default function Level2Screen() {
       if (scoreDelta) setScore((s) => s + scoreDelta);
       setMissiles(survivingMissiles);
       missilesRef.current = survivingMissiles;
-      setEnemies(aliveEnemies);
-      enemiesRef.current = aliveEnemies;
+      if (prevMissiles.length > 0 || enemiesNext.length > 0) {
+        setEnemies(aliveEnemies);
+        enemiesRef.current = aliveEnemies;
+      }
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
