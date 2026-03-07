@@ -2,7 +2,7 @@ import {
   useFonts,
   PressStart2P_400Regular,
 } from '@expo-google-fonts/press-start-2p';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
-import { LEVEL_1 } from '../config/levels/level1';
+import { LEVEL_2 } from '../config/levels/level2';
 import { getEnemyType } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
 
@@ -43,7 +43,7 @@ const PALETTE = {
 const GUN_SIZE = 24;
 const MISSILE_SIZE = 4;
 const MISSILE_SPEED = 8;
-const GUN_SPEED = 3; // steady speed, slower than missiles
+const GUN_SPEED = 3;
 const BRICK_W = 20;
 const BRICK_H = 10;
 const MORTAR = 1;
@@ -123,8 +123,10 @@ function BrickWall({
   );
 }
 
-export default function Level1Screen() {
+export default function Level2Screen() {
   const router = useRouter();
+  const { score: initialScoreParam } = useLocalSearchParams<{ score?: string }>();
+  const initialScore = parseInt(initialScoreParam ?? '0', 10) || 0;
   const { setHighScore } = useGame();
 
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
@@ -136,7 +138,7 @@ export default function Level1Screen() {
   const [enemies, setEnemies] = useState<Enemy[]>([]);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(0);
   const [levelComplete, setLevelComplete] = useState(false);
-  const [score, setScore] = useState(0);
+  const [score, setScore] = useState(initialScore);
   const [lives, setLives] = useState(INITIAL_LIVES);
   const [gameActive, setGameActive] = useState(true);
   const gunRef = useRef<Gun | null>(null);
@@ -148,12 +150,11 @@ export default function Level1Screen() {
 
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
-  // Spawn current wave when dimensions ready
   useEffect(() => {
     const w = innerWidth;
     const h = innerHeight;
     if (w <= 0 || h <= 0) return;
-    const waves = LEVEL_1.waves;
+    const waves = LEVEL_2.waves;
     if (currentWaveIndex >= waves.length) return;
 
     const wave = waves[currentWaveIndex];
@@ -178,14 +179,13 @@ export default function Level1Screen() {
 
   const prevEnemiesCountRef = useRef(0);
 
-  // When all enemies destroyed (wave cleared): advance wave or level complete
   useEffect(() => {
     const wasEmpty = prevEnemiesCountRef.current === 0;
     const nowEmpty = enemies.length === 0;
     prevEnemiesCountRef.current = enemies.length;
 
     if (!wasEmpty && nowEmpty) {
-      const waves = LEVEL_1.waves;
+      const waves = LEVEL_2.waves;
       if (currentWaveIndex < waves.length - 1) {
         setCurrentWaveIndex((i) => i + 1);
       } else {
@@ -241,7 +241,7 @@ export default function Level1Screen() {
       const dx = tapX - g.x;
       const dy = tapY - g.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      if (distance < GUN_SIZE) return; // only change direction when tapping outside the gun
+      if (distance < GUN_SIZE) return;
 
       const rotation = (Math.atan2(dx, -dy) * 180) / Math.PI;
       const invD = 1 / distance;
@@ -252,7 +252,6 @@ export default function Level1Screen() {
       gunRef.current = next;
       setGun(next);
 
-      // Fire missile in new direction
       const rad = (rotation * Math.PI) / 180;
       const mdx = Math.sin(rad) * MISSILE_SPEED;
       const mdy = -Math.cos(rad) * MISSILE_SPEED;
@@ -381,7 +380,7 @@ export default function Level1Screen() {
       }
       menuCenter={
         <Text style={[styles.levelText, { fontFamily: 'PressStart2P_400Regular' }]}>
-          L-01
+          L-02
         </Text>
       }
       menuRight={
@@ -405,7 +404,7 @@ export default function Level1Screen() {
           </View>
         </>
       }
-      contentStyle={styles.level1Content}
+      contentStyle={styles.levelContent}
     >
       {!gameActive && (
         <View style={styles.gameOverOverlay}>
@@ -436,13 +435,10 @@ export default function Level1Screen() {
           </Text>
           <TouchableOpacity
             style={styles.gameOverButton}
-            onPress={() => {
-              setHighScore((prev) => Math.max(prev, score));
-              router.replace({ pathname: '/level2', params: { score: String(score) } });
-            }}
+            onPress={() => handleEndGame(score)}
           >
             <Text style={[styles.gameOverButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-              NEXT
+              EXIT
             </Text>
           </TouchableOpacity>
         </View>
@@ -502,7 +498,7 @@ export default function Level1Screen() {
 }
 
 const styles = StyleSheet.create({
-  level1Content: {
+  levelContent: {
     paddingHorizontal: 0,
     flex: 1,
   },
@@ -515,11 +511,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: PALETTE.cyan,
     letterSpacing: 1,
-  },
-  menuRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
   },
   scoreText: {
     fontSize: 14,
