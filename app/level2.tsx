@@ -365,22 +365,23 @@ export default function Level2Screen() {
             if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
               hitEnemy = true;
               const newLives = Math.max(0, livesRef.current - 1);
-            livesRef.current = newLives;
-            setLives(newLives);
-            if (newLives <= 0) setGameActive(false);
-            setGun(null);
-            gunRef.current = null;
-            if (newLives > 0) {
-              const padding = GUN_SIZE + 10;
-              const nx = padding + Math.random() * (width - padding * 2);
-              const ny = padding + Math.random() * (height - padding * 2);
-              setTimeout(() => {
-                const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
-                gunRef.current = ng;
-                setGun(ng);
-              }, 500);
+              livesRef.current = newLives;
+              setLives(newLives);
+              if (newLives <= 0) setGameActive(false);
+              setGun(null);
+              gunRef.current = null;
+              if (newLives > 0) {
+                const padding = GUN_SIZE + 10;
+                const nx = padding + Math.random() * (width - padding * 2);
+                const ny = padding + Math.random() * (height - padding * 2);
+                setTimeout(() => {
+                  const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
+                  gunRef.current = ng;
+                  setGun(ng);
+                }, 500);
+              }
+              break;
             }
-            break;
           }
         }
         if (!hitEnemy) {
