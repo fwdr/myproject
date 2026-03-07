@@ -42,6 +42,7 @@ const PALETTE = {
 
 const GUN_SIZE = 24;
 const MISSILE_SIZE = 4;
+const MISSILE_HIT_RADIUS = 8;
 const MISSILE_SPEED = 8;
 const GUN_SPEED = 3;
 const BRICK_W = 20;
@@ -283,9 +284,8 @@ export default function Level2Screen() {
       gunRef.current = next;
       setGun(next);
 
-      const rad = (rotation * Math.PI) / 180;
-      const mdx = Math.sin(rad) * MISSILE_SPEED;
-      const mdy = -Math.cos(rad) * MISSILE_SPEED;
+      const mdx = dx * invD * MISSILE_SPEED;
+      const mdy = dy * invD * MISSILE_SPEED;
       const m: Missile = { id: ++missileId, x: g.x, y: g.y, dx: mdx, dy: mdy };
       setMissiles((prev) => {
         const nextM = [...prev, m];
@@ -397,7 +397,7 @@ export default function Level2Screen() {
       const movedMissiles = prevMissiles.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
       const survivingMissiles = movedMissiles.filter((m) => {
         for (const o of obstaclesRef.current) {
-          if (hitTest(m.x, m.y, MISSILE_SIZE / 2, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
+          if (hitTest(m.x, m.y, MISSILE_HIT_RADIUS, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
             return false;
           }
         }
@@ -406,7 +406,7 @@ export default function Level2Screen() {
           if (e.health <= 0) continue;
           const r = getEnemyType(e.typeId).radius;
           const def = getEnemyType(e.typeId);
-          if (hitTest(m.x, m.y, MISSILE_SIZE / 2, e.x, e.y, r)) {
+          if (hitTest(m.x, m.y, MISSILE_HIT_RADIUS, e.x, e.y, r)) {
             const damaged = { ...e, health: e.health - 1 };
             if (damaged.health <= 0) scoreDelta += def.points;
             enemiesAfterHits = [

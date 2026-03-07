@@ -42,6 +42,7 @@ const PALETTE = {
 
 const GUN_SIZE = 24;
 const MISSILE_SIZE = 4;
+const MISSILE_HIT_RADIUS = 8;
 const MISSILE_SPEED = 8;
 const GUN_SPEED = 3; // steady speed, slower than missiles
 const BRICK_W = 20;
@@ -261,10 +262,9 @@ export default function Level1Screen() {
       gunRef.current = next;
       setGun(next);
 
-      // Fire missile in new direction
-      const rad = (rotation * Math.PI) / 180;
-      const mdx = Math.sin(rad) * MISSILE_SPEED;
-      const mdy = -Math.cos(rad) * MISSILE_SPEED;
+      // Fire missile directly toward tap point
+      const mdx = dx * invD * MISSILE_SPEED;
+      const mdy = dy * invD * MISSILE_SPEED;
       const m: Missile = { id: ++missileId, x: g.x, y: g.y, dx: mdx, dy: mdy };
       setMissiles((prev) => {
         const nextM = [...prev, m];
@@ -372,7 +372,7 @@ export default function Level1Screen() {
           if (e.health <= 0) continue;
           const r = getEnemyType(e.typeId).radius;
           const def = getEnemyType(e.typeId);
-          if (hitTest(m.x, m.y, MISSILE_SIZE / 2, e.x, e.y, r)) {
+            if (hitTest(m.x, m.y, MISSILE_HIT_RADIUS, e.x, e.y, r)) {
             const damaged = { ...e, health: e.health - 1 };
             if (damaged.health <= 0) scoreDelta += def.points;
             enemiesAfterHits = [
