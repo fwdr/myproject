@@ -3,7 +3,7 @@ import {
   PressStart2P_400Regular,
 } from '@expo-google-fonts/press-start-2p';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -51,6 +51,8 @@ const GAP_HEIGHT = GUN_SIZE * 2;
 const INITIAL_LIVES = 3;
 const GUN_RADIUS = GUN_SIZE / 2;
 const ENEMY_SPEED = 1.5;
+const STATIC_OBSTACLE_RADIUS = 16;
+const L2_BG = '#1a0a2e';
 let missileId = 0;
 let enemyId = 0;
 
@@ -58,7 +60,10 @@ type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 type Enemy = { id: number; typeId: EnemyTypeId; x: number; y: number; health: number };
 
-function BrickWall({
+const L2_BRICK_BG = PALETTE.teal;
+const L2_BRICK_BORDER = PALETTE.cyan;
+
+function BrickWallL2({
   width,
   height,
   innerHeight,
@@ -75,19 +80,21 @@ function BrickWall({
   const bricksAboveGap = Math.floor(gapTop / BRICK_H);
   const bricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
   const bricksBelowGap = Math.max(0, sideN - bricksAboveGap - bricksInGap);
+  const brickStyle = { backgroundColor: L2_BRICK_BG, borderColor: L2_BRICK_BORDER };
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
       key={key}
       style={[
         styles.brickHorizontal,
+        brickStyle,
         offset !== undefined && { marginLeft: offset },
       ]}
     />
   );
 
   const brickVert = (key: string) => (
-    <View key={key} style={styles.brick} />
+    <View key={key} style={[styles.brick, brickStyle]} />
   );
 
   const renderSideColumn = (prefix: string) => (
@@ -153,6 +160,17 @@ export default function Level2Screen() {
   const livesRef = useRef(INITIAL_LIVES);
   const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
+
+  const obstaclePositions = useMemo(() => {
+    const obs = LEVEL_2.staticObstacles ?? [];
+    return obs.map((o) => ({
+      x: o.x * innerWidth,
+      y: o.y * innerHeight,
+    }));
+  }, [innerWidth, innerHeight]);
+
+  const obstaclesRef = useRef(obstaclePositions);
+  obstaclesRef.current = obstaclePositions;
 
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
@@ -334,12 +352,19 @@ export default function Level2Screen() {
         }
 
         let hitEnemy = false;
-        for (const e of obs) {
-          if (e.health <= 0) continue;
-          const r = getEnemyType(e.typeId).radius;
-          if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
+        for (const o of obstaclesRef.current) {
+          if (hitTest(x, y, GUN_RADIUS, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
             hitEnemy = true;
-            const newLives = Math.max(0, livesRef.current - 1);
+            break;
+          }
+        }
+        if (!hitEnemy) {
+          for (const e of obs) {
+            if (e.health <= 0) continue;
+            const r = getEnemyType(e.typeId).radius;
+            if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
+              hitEnemy = true;
+              const newLives = Math.max(0, livesRef.current - 1);
             livesRef.current = newLives;
             setLives(newLives);
             if (newLives <= 0) setGameActive(false);
@@ -370,6 +395,11 @@ export default function Level2Screen() {
       let enemiesAfterHits = enemiesNext;
       const movedMissiles = prevMissiles.map((m) => ({ ...m, x: m.x + m.dx, y: m.y + m.dy }));
       const survivingMissiles = movedMissiles.filter((m) => {
+        for (const o of obstaclesRef.current) {
+          if (hitTest(m.x, m.y, MISSILE_SIZE / 2, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
+            return false;
+          }
+        }
         for (let i = 0; i < enemiesAfterHits.length; i++) {
           const e = enemiesAfterHits[i];
           if (e.health <= 0) continue;
@@ -411,8 +441,8 @@ export default function Level2Screen() {
 
   return (
     <ScreenLayout
-      containerStyle={{ backgroundColor: PALETTE.navy }}
-      menuBarStyle={{ backgroundColor: PALETTE.navy, borderBottomColor: PALETTE.cyan }}
+      containerStyle={{ backgroundColor: L2_BG }}
+      menuBarStyle={{ backgroundColor: L2_BG, borderBottomColor: PALETTE.magenta }}
       menuLeft={
         <TouchableOpacity
           onPress={() => handleEndGame(score)}
@@ -488,7 +518,7 @@ export default function Level2Screen() {
       )}
 
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
-        <BrickWall
+        <BrickWallL2
           width={dimensions.width}
           height={playAreaHeight}
           innerHeight={innerHeight}
@@ -505,6 +535,18 @@ export default function Level2Screen() {
             setGameAreaLayout({ x: layout.x, y: layout.y });
           }}
         >
+          {obstaclePositions.map((o, i) => (
+            <View
+              key={`obs-${i}`}
+              style={[
+                styles.staticObstacle,
+                {
+                  left: o.x - STATIC_OBSTACLE_RADIUS,
+                  top: o.y - STATIC_OBSTACLE_RADIUS,
+                },
+              ]}
+            />
+          ))}
           {gun && (
             <View
               style={[

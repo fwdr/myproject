@@ -5,9 +5,11 @@ export type WaveSpawn = {
   count: number;
 };
 
+export type StaticObstacle = { x: number; y: number }; // fractional 0-1
 export type LevelConfig = {
   id: string;
   waves: WaveSpawn[][];
+  staticObstacles?: StaticObstacle[];
 };
 
 export const LEVEL_1: LevelConfig = {
