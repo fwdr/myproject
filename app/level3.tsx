@@ -20,6 +20,7 @@ import { LEVEL_3 } from '../config/levels/level3';
 import type { TunnelType } from '../config/levels/level1';
 import { getEnemyType } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
+import { PowerupSprite } from '../components/sprites/PowerupSprite';
 
 // Retro 16-color EGA palette
 const PALETTE = {
@@ -54,12 +55,19 @@ const INITIAL_LIVES = 3;
 const GUN_RADIUS = GUN_SIZE / 2;
 const ENEMY_SPEED = 1.5;
 const L3_BG = PALETTE.navy;
+const POWERUP_SPAWN_CHANCE = 0.04;
+const POWERUP_SPAWN_INTERVAL_MS = 2000;
+const POWERUP_DURATION_MS = 10000;
+const POWERUP_RADIUS = 10;
+const DUAL_MISSILE_OFFSET = 8;
 let missileId = 0;
 let enemyId = 0;
+let powerupId = 0;
 
 type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 type Enemy = { id: number; typeId: EnemyTypeId; x: number; y: number; health: number };
+type Powerup = { id: number; x: number; y: number };
 
 const L3_BRICK_BG = PALETTE.teal;
 const L3_BRICK_BORDER = PALETTE.cyan;
@@ -158,6 +166,8 @@ export default function Level3Screen() {
   const [gun, setGun] = useState<Gun | null>(null);
   const [missiles, setMissiles] = useState<Missile[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [powerups, setPowerups] = useState<Powerup[]>([]);
+  const [dualMissileUntil, setDualMissileUntil] = useState(0);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(0);
   const [levelComplete, setLevelComplete] = useState(false);
   const [score, setScore] = useState(initialScore);
@@ -166,6 +176,8 @@ export default function Level3Screen() {
   const gunRef = useRef<Gun | null>(null);
   const missilesRef = useRef<Missile[]>([]);
   const enemiesRef = useRef<Enemy[]>([]);
+  const powerupsRef = useRef<Powerup[]>([]);
+  const dualMissileUntilRef = useRef(0);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   const livesRef = useRef(INITIAL_LIVES);
   const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
@@ -245,8 +257,32 @@ export default function Level3Screen() {
   }, [enemies]);
 
   useEffect(() => {
+    powerupsRef.current = powerups;
+  }, [powerups]);
+
+  useEffect(() => {
+    dualMissileUntilRef.current = dualMissileUntil;
+  }, [dualMissileUntil]);
+
+  useEffect(() => {
     livesRef.current = lives;
   }, [lives]);
+
+  // Powerup spawn: 4% chance every 2 seconds
+  useEffect(() => {
+    if (!gameActive || levelComplete) return;
+    const w = innerWidth;
+    const h = innerHeight;
+    if (w <= 0 || h <= 0) return;
+    const margin = 40;
+    const interval = setInterval(() => {
+      if (Math.random() >= POWERUP_SPAWN_CHANCE) return;
+      const x = margin + Math.random() * (w - margin * 2);
+      const y = margin + Math.random() * (h - margin * 2);
+      setPowerups((prev) => [...prev, { id: ++powerupId, x, y }]);
+    }, POWERUP_SPAWN_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [gameActive, levelComplete, innerWidth, innerHeight]);
 
   useEffect(() => {
     const w = innerWidth;
@@ -301,12 +337,38 @@ export default function Level3Screen() {
 
       const mdx = dx * invD * MISSILE_SPEED;
       const mdy = dy * invD * MISSILE_SPEED;
-      const m: Missile = { id: ++missileId, x: g.x, y: g.y, dx: mdx, dy: mdy };
-      setMissiles((prev) => {
-        const nextM = [...prev, m];
-        missilesRef.current = nextM;
-        return nextM;
-      });
+      const dualMode = Date.now() < dualMissileUntilRef.current;
+
+      if (dualMode) {
+        const perpX = -dy * invD;
+        const perpY = dx * invD;
+        const m1: Missile = {
+          id: ++missileId,
+          x: g.x - perpX * DUAL_MISSILE_OFFSET,
+          y: g.y - perpY * DUAL_MISSILE_OFFSET,
+          dx: mdx,
+          dy: mdy,
+        };
+        const m2: Missile = {
+          id: ++missileId,
+          x: g.x + perpX * DUAL_MISSILE_OFFSET,
+          y: g.y + perpY * DUAL_MISSILE_OFFSET,
+          dx: mdx,
+          dy: mdy,
+        };
+        setMissiles((prev) => {
+          const nextM = [...prev, m1, m2];
+          missilesRef.current = nextM;
+          return nextM;
+        });
+      } else {
+        const m: Missile = { id: ++missileId, x: g.x, y: g.y, dx: mdx, dy: mdy };
+        setMissiles((prev) => {
+          const nextM = [...prev, m];
+          missilesRef.current = nextM;
+          return nextM;
+        });
+      }
     },
     [gameAreaLayout.x, gameAreaLayout.y]
   );
@@ -383,6 +445,21 @@ export default function Level3Screen() {
               if (inVerticalGap(x)) y = pad + 1;
               else { y = height - pad; }
             }
+          }
+        }
+
+        // Powerup collision (consume on contact)
+        const powerupsNow = powerupsRef.current;
+        let hitPowerup = false;
+        for (let i = 0; i < powerupsNow.length; i++) {
+          const p = powerupsNow[i];
+          if (hitTest(x, y, GUN_RADIUS, p.x, p.y, POWERUP_RADIUS)) {
+            setPowerups((prev) => prev.filter((pu) => pu.id !== p.id));
+            const until = Date.now() + POWERUP_DURATION_MS;
+            setDualMissileUntil(until);
+            dualMissileUntilRef.current = until;
+            hitPowerup = true;
+            break;
           }
         }
 
@@ -576,6 +653,9 @@ export default function Level3Screen() {
             const Sprite = def.Sprite;
             return <Sprite key={e.id} x={e.x} y={e.y} />;
           })}
+          {powerups.map((p) => (
+            <PowerupSprite key={p.id} x={p.x} y={p.y} />
+          ))}
           {missiles.map((m) => (
             <View
               key={m.id}
