@@ -16,27 +16,21 @@ import {
 } from 'react-native';
 import { useGame } from '../context/GameContext';
 import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
-import { LEVEL_3 } from '../config/levels/level3';
+import { LEVEL_4 } from '../config/levels/level4';
 import type { TunnelType } from '../config/levels/level1';
 import { getEnemyType } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
 
-// Retro 16-color EGA palette
+const GAP_WIDTH = 48;
+
 const PALETTE = {
   black: '#000000',
   navy: '#000080',
-  green: '#008000',
-  teal: '#008080',
   maroon: '#800000',
   purple: '#800080',
-  olive: '#808000',
-  silver: '#C0C0C0',
-  gray: '#808080',
-  blue: '#0000FF',
+  magenta: '#FF00FF',
   lime: '#00FF00',
   cyan: '#00FFFF',
-  red: '#FF0000',
-  magenta: '#FF00FF',
   yellow: '#FFFF00',
   white: '#FFFFFF',
 };
@@ -53,7 +47,7 @@ const GAP_HEIGHT = GUN_SIZE * 2;
 const INITIAL_LIVES = 3;
 const GUN_RADIUS = GUN_SIZE / 2;
 const ENEMY_SPEED = 1.5;
-const L3_BG = PALETTE.navy;
+const L4_BG = PALETTE.purple;
 let missileId = 0;
 let enemyId = 0;
 
@@ -61,30 +55,22 @@ type Gun = { x: number; y: number; rotation: number; vx: number; vy: number };
 type Missile = { id: number; x: number; y: number; dx: number; dy: number };
 type Enemy = { id: number; typeId: EnemyTypeId; x: number; y: number; health: number };
 
-const L3_BRICK_BG = PALETTE.teal;
-const L3_BRICK_BORDER = PALETTE.cyan;
+const L4_BRICK_BG = PALETTE.magenta;
+const L4_BRICK_BORDER = PALETTE.cyan;
 
-function BrickWallL3({
+function BrickWallL4({
   width,
-  height,
+  innerWidth,
   innerHeight,
-  tunnel = 'horizontal',
+  tunnel = 'vertical',
 }: {
   width: number;
-  height: number;
+  innerWidth: number;
   innerHeight: number;
   tunnel?: TunnelType;
 }) {
-  const topN = Math.ceil(width / BRICK_W) + 2;
-  const sideHeight = innerHeight;
-  const sideN = Math.ceil(sideHeight / BRICK_H);
-  const gapCenterY = innerHeight / 2;
-  const gapTop = gapCenterY - GAP_HEIGHT / 2;
-  const bricksAboveGap = Math.floor(gapTop / BRICK_H);
-  const bricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
-  const bricksBelowGap = Math.max(0, sideN - bricksAboveGap - bricksInGap);
-  const hasSideGaps = tunnel === 'horizontal';
-  const brickStyle = { backgroundColor: L3_BRICK_BG, borderColor: L3_BRICK_BORDER };
+  const brickStyle = { backgroundColor: L4_BRICK_BG, borderColor: L4_BRICK_BORDER };
+  const hasTopBottomGaps = tunnel === 'vertical';
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
@@ -101,47 +87,52 @@ function BrickWallL3({
     <View key={key} style={[styles.brick, brickStyle]} />
   );
 
-  const renderSideColumn = (prefix: string) => (
-    <View style={[styles.brickStripColInner, { height: sideHeight }]}>
-      {hasSideGaps ? (
-        <>
-          {Array.from({ length: bricksAboveGap }).map((_, i) =>
-            brickVert(`${prefix}-above-${i}`)
-          )}
-          <View style={styles.gapSpacer} />
-          {Array.from({ length: bricksBelowGap }).map((_, i) =>
-            brickVert(`${prefix}-below-${i}`)
-          )}
-        </>
-      ) : (
-        Array.from({ length: sideN }).map((_, i) => brickVert(`${prefix}-${i}`))
-      )}
-    </View>
-  );
+  const sideN = Math.ceil(innerHeight / BRICK_H);
+
+  const renderTopBottomStrip = (prefix: string) => {
+    if (!hasTopBottomGaps) {
+      const topN = Math.ceil(width / BRICK_W) + 2;
+      return Array.from({ length: topN }).map((_, i) =>
+        brickHoriz(`${prefix}-${i}`, i % 2 === (prefix === 't' ? 1 : 0) ? BRICK_W / 2 : 0)
+      );
+    }
+    const bricksPerSide = Math.floor((width - GAP_WIDTH) / 2 / BRICK_W);
+    const leftBricks = Array.from({ length: bricksPerSide }).map((_, i) =>
+      brickHoriz(`${prefix}-l-${i}`, i % 2 === (prefix === 't' ? 1 : 0) ? BRICK_W / 2 : 0)
+    );
+    const rightBricks = Array.from({ length: bricksPerSide }).map((_, i) =>
+      brickHoriz(`${prefix}-r-${i}`, i % 2 === (prefix === 't' ? 1 : 0) ? BRICK_W / 2 : 0)
+    );
+    return [
+      ...leftBricks,
+      <View key={`${prefix}-gap`} style={styles.gapSpacerHorizontal} />,
+      ...rightBricks,
+    ];
+  };
 
   return (
     <>
-      <View style={[styles.brickStrip, styles.brickTop, { width }]}>
-        {Array.from({ length: topN }).map((_, i) =>
-          brickHoriz(`t-${i}`, i % 2 === 1 ? BRICK_W / 2 : 0)
-        )}
+      <View style={[styles.brickStrip, styles.brickTop, { width }, hasTopBottomGaps && styles.brickStripCentered]}>
+        {renderTopBottomStrip('t')}
       </View>
-      <View style={[styles.brickStrip, styles.brickBottom, { width }]}>
-        {Array.from({ length: topN }).map((_, i) =>
-          brickHoriz(`b-${i}`, i % 2 === 0 ? BRICK_W / 2 : 0)
-        )}
+      <View style={[styles.brickStrip, styles.brickBottom, { width }, hasTopBottomGaps && styles.brickStripCentered]}>
+        {renderTopBottomStrip('b')}
       </View>
       <View style={[styles.brickStripCol, styles.brickLeft]}>
-        {renderSideColumn('l')}
+        <View style={[styles.brickStripColInner, { height: innerHeight }]}>
+          {Array.from({ length: sideN }).map((_, i) => brickVert(`l-${i}`))}
+        </View>
       </View>
       <View style={[styles.brickStripCol, styles.brickRight]}>
-        {renderSideColumn('r')}
+        <View style={[styles.brickStripColInner, { height: innerHeight }]}>
+          {Array.from({ length: sideN }).map((_, i) => brickVert(`r-${i}`))}
+        </View>
       </View>
     </>
   );
 }
 
-export default function Level3Screen() {
+export default function Level4Screen() {
   const router = useRouter();
   const { score: initialScoreParam } = useLocalSearchParams<{ score?: string }>();
   const initialScore = parseInt(initialScoreParam ?? '0', 10) || 0;
@@ -177,10 +168,11 @@ export default function Level3Screen() {
     const w = innerWidth;
     const h = innerHeight;
     if (w <= 0 || h <= 0) return;
-    const waves = LEVEL_3.waves;
+    const waves = LEVEL_4.waves;
     if (currentWaveIndex >= waves.length) return;
 
     const wave = waves[currentWaveIndex];
+    const newEnemies: Enemy[] = [];
     const margin = 8;
     const spawnAtEdge = () => {
       const side = Math.floor(Math.random() * 4);
@@ -189,38 +181,22 @@ export default function Level3Screen() {
       if (side === 2) return { x: margin + Math.random() * (w - margin * 2), y: h };
       return { x: 0, y: margin + Math.random() * (h - margin * 2) };
     };
-    const spawnOrigin = LEVEL_3.spawnOrigin ?? 'scattered';
+    const spawnOrigin = LEVEL_4.spawnOrigin ?? 'scattered';
     const waveOrigin = spawnOrigin === 'grouped' ? spawnAtEdge() : null;
-
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-
     for (const spawn of wave) {
       const def = getEnemyType(spawn.enemyType);
-      const delayMs = spawn.spawnDelayMs ?? 0;
       for (let i = 0; i < spawn.count; i++) {
-        const delay = i * delayMs;
         const { x, y } = waveOrigin ?? spawnAtEdge();
-        const newEnemy = {
+        newEnemies.push({
           id: ++enemyId,
           typeId: spawn.enemyType,
           x,
           y,
           health: def.health,
-        };
-        if (delay === 0) {
-          setEnemies((prev) => [...prev, newEnemy]);
-        } else {
-          const t = setTimeout(() => {
-            setEnemies((prev) => [...prev, newEnemy]);
-          }, delay);
-          timeouts.push(t);
-        }
+        });
       }
     }
-
-    return () => {
-      timeouts.forEach((t) => clearTimeout(t));
-    };
+    setEnemies(newEnemies);
   }, [innerWidth, innerHeight, currentWaveIndex]);
 
   const prevEnemiesCountRef = useRef(0);
@@ -231,7 +207,7 @@ export default function Level3Screen() {
     prevEnemiesCountRef.current = enemies.length;
 
     if (!wasEmpty && nowEmpty) {
-      const waves = LEVEL_3.waves;
+      const waves = LEVEL_4.waves;
       if (currentWaveIndex < waves.length - 1) {
         setCurrentWaveIndex((i) => i + 1);
       } else {
@@ -348,7 +324,7 @@ export default function Level3Screen() {
         let y = g.y + vy;
         let nextVx = vx;
         const pad = GUN_SIZE / 2;
-        const tunnelType = LEVEL_3.tunnel ?? 'horizontal';
+        const tunnelType = LEVEL_4.tunnel ?? 'vertical';
         const gapCenterY = height / 2;
         const gapTop = gapCenterY - GAP_HEIGHT / 2;
         const gapBottom = gapCenterY + GAP_HEIGHT / 2;
@@ -365,8 +341,8 @@ export default function Level3Screen() {
           y = Math.max(pad, Math.min(height - pad, y));
           nextVx = x <= pad || x >= width - pad ? 0 : vx;
         } else {
-          y = Math.max(pad, Math.min(height - pad, y));
           if (tunnelType === 'horizontal') {
+            y = Math.max(pad, Math.min(height - pad, y));
             if (x < pad) {
               if (inHorizontalGap(y)) x = width - pad - 1;
               else { x = pad; nextVx = 0; }
@@ -464,8 +440,8 @@ export default function Level3Screen() {
 
   return (
     <ScreenLayout
-      containerStyle={{ backgroundColor: L3_BG }}
-      menuBarStyle={{ backgroundColor: L3_BG, borderBottomColor: PALETTE.magenta }}
+      containerStyle={{ backgroundColor: L4_BG }}
+      menuBarStyle={{ backgroundColor: L4_BG, borderBottomColor: PALETTE.magenta }}
       menuLeft={
         <TouchableOpacity
           onPress={() => handleEndGame(score)}
@@ -476,7 +452,7 @@ export default function Level3Screen() {
       }
       menuCenter={
         <Text style={[styles.levelText, { fontFamily: 'PressStart2P_400Regular' }]}>
-          L-03
+          L-04
         </Text>
       }
       menuRight={
@@ -531,7 +507,7 @@ export default function Level3Screen() {
           </Text>
           <TouchableOpacity
             style={styles.gameOverButton}
-            onPress={() => router.replace({ pathname: '/level4', params: { score: String(score) } })}
+            onPress={() => handleEndGame(score)}
           >
             <Text style={[styles.gameOverButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
               EXIT
@@ -541,11 +517,11 @@ export default function Level3Screen() {
       )}
 
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
-        <BrickWallL3
+        <BrickWallL4
           width={dimensions.width}
-          height={playAreaHeight}
+          innerWidth={innerWidth}
           innerHeight={innerHeight}
-          tunnel={LEVEL_3.tunnel ?? 'horizontal'}
+          tunnel={LEVEL_4.tunnel ?? 'vertical'}
         />
         <Pressable
           ref={gameAreaRef}
@@ -634,7 +610,7 @@ const styles = StyleSheet.create({
   },
   gameOverText: {
     fontSize: 20,
-    color: PALETTE.red,
+    color: PALETTE.magenta,
     marginBottom: 16,
     letterSpacing: 2,
   },
@@ -673,18 +649,18 @@ const styles = StyleSheet.create({
   brick: {
     width: BRICK_W - MORTAR,
     height: BRICK_H - MORTAR,
-    backgroundColor: PALETTE.red,
+    backgroundColor: PALETTE.maroon,
     borderWidth: 1,
-    borderColor: PALETTE.maroon,
+    borderColor: PALETTE.purple,
     marginRight: MORTAR,
     marginBottom: MORTAR,
   },
   brickHorizontal: {
     width: BRICK_W - MORTAR,
     height: BRICK_H - MORTAR,
-    backgroundColor: PALETTE.red,
+    backgroundColor: PALETTE.maroon,
     borderWidth: 1,
-    borderColor: PALETTE.maroon,
+    borderColor: PALETTE.purple,
     marginRight: MORTAR,
   },
   brickStrip: {
@@ -694,6 +670,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'nowrap',
   },
+  brickStripCentered: {
+    justifyContent: 'center',
+  },
   brickStripCol: {
     position: 'absolute',
     top: BRICK_H,
@@ -702,9 +681,9 @@ const styles = StyleSheet.create({
   brickStripColInner: {
     flexDirection: 'column',
   },
-  gapSpacer: {
-    height: GAP_HEIGHT,
-    width: BRICK_W - MORTAR,
+  gapSpacerHorizontal: {
+    width: GAP_WIDTH,
+    height: BRICK_H - MORTAR,
   },
   brickTop: { top: 0 },
   brickBottom: { bottom: 0 },

@@ -19,6 +19,7 @@ export default function RootLayout() {
         <Stack.Screen name="level1" />
         <Stack.Screen name="level2" />
         <Stack.Screen name="level3" />
+        <Stack.Screen name="level4" />
       </Stack>
     </GameProvider>
   );
