@@ -17,6 +17,7 @@ import {
 import { useGame } from '../context/GameContext';
 import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
 import { LEVEL_1 } from '../config/levels/level1';
+import type { TunnelType } from '../config/levels/level1';
 import { getEnemyType } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
 
@@ -63,10 +64,12 @@ function BrickWall({
   width,
   height,
   innerHeight,
+  tunnel = 'horizontal',
 }: {
   width: number;
   height: number;
   innerHeight: number;
+  tunnel?: TunnelType;
 }) {
   const topN = Math.ceil(width / BRICK_W) + 2;
   const sideHeight = innerHeight;
@@ -76,6 +79,7 @@ function BrickWall({
   const bricksAboveGap = Math.floor(gapTop / BRICK_H);
   const bricksInGap = Math.ceil(GAP_HEIGHT / BRICK_H);
   const bricksBelowGap = Math.max(0, sideN - bricksAboveGap - bricksInGap);
+  const hasSideGaps = tunnel === 'horizontal';
 
   const brickHoriz = (key: string, offset?: number) => (
     <View
@@ -93,12 +97,18 @@ function BrickWall({
 
   const renderSideColumn = (prefix: string) => (
     <View style={[styles.brickStripColInner, { height: sideHeight }]}>
-      {Array.from({ length: bricksAboveGap }).map((_, i) =>
-        brickVert(`${prefix}-above-${i}`)
-      )}
-      <View style={styles.gapSpacer} />
-      {Array.from({ length: bricksBelowGap }).map((_, i) =>
-        brickVert(`${prefix}-below-${i}`)
+      {hasSideGaps ? (
+        <>
+          {Array.from({ length: bricksAboveGap }).map((_, i) =>
+            brickVert(`${prefix}-above-${i}`)
+          )}
+          <View style={styles.gapSpacer} />
+          {Array.from({ length: bricksBelowGap }).map((_, i) =>
+            brickVert(`${prefix}-below-${i}`)
+          )}
+        </>
+      ) : (
+        Array.from({ length: sideN }).map((_, i) => brickVert(`${prefix}-${i}`))
       )}
     </View>
   );
@@ -314,20 +324,42 @@ export default function Level1Screen() {
         let y = g.y + vy;
         let nextVx = vx;
         const pad = GUN_SIZE / 2;
+        const tunnelType = LEVEL_1.tunnel ?? 'horizontal';
         const gapCenterY = height / 2;
         const gapTop = gapCenterY - GAP_HEIGHT / 2;
         const gapBottom = gapCenterY + GAP_HEIGHT / 2;
-        const inGap = (gy: number) =>
+        const inHorizontalGap = (gy: number) =>
           gy >= gapTop - 4 && gy <= gapBottom + 4;
+        const gapCenterX = width / 2;
+        const gapLeft = gapCenterX - GAP_HEIGHT / 2;
+        const gapRight = gapCenterX + GAP_HEIGHT / 2;
+        const inVerticalGap = (gx: number) =>
+          gx >= gapLeft - 4 && gx <= gapRight + 4;
 
-        y = Math.max(pad, Math.min(height - pad, y));
-
-        if (x < pad) {
-          if (inGap(y)) x = width - pad - 1;
-          else { x = pad; nextVx = 0; }
-        } else if (x > width - pad) {
-          if (inGap(y)) x = pad + 1;
-          else { x = width - pad; nextVx = 0; }
+        if (tunnelType === 'none') {
+          x = Math.max(pad, Math.min(width - pad, x));
+          y = Math.max(pad, Math.min(height - pad, y));
+          nextVx = x <= pad || x >= width - pad ? 0 : vx;
+        } else {
+          y = Math.max(pad, Math.min(height - pad, y));
+          if (tunnelType === 'horizontal') {
+            if (x < pad) {
+              if (inHorizontalGap(y)) x = width - pad - 1;
+              else { x = pad; nextVx = 0; }
+            } else if (x > width - pad) {
+              if (inHorizontalGap(y)) x = pad + 1;
+              else { x = width - pad; nextVx = 0; }
+            }
+          } else {
+            x = Math.max(pad, Math.min(width - pad, x));
+            if (y < pad) {
+              if (inVerticalGap(x)) y = height - pad - 1;
+              else { y = pad; }
+            } else if (y > height - pad) {
+              if (inVerticalGap(x)) y = pad + 1;
+              else { y = height - pad; }
+            }
+          }
         }
 
         let hitEnemy = false;
@@ -492,6 +524,7 @@ export default function Level1Screen() {
           width={dimensions.width}
           height={playAreaHeight}
           innerHeight={innerHeight}
+          tunnel={LEVEL_1.tunnel ?? 'horizontal'}
         />
         <Pressable
           ref={gameAreaRef}
