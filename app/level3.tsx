@@ -21,6 +21,7 @@ export default function Level3Screen() {
       config={LEVEL_3}
       initialScore={initialScore}
       levelLabel="L-03"
+      levelNumber={3}
       backgroundColor={PALETTE.navy}
       brickStyle={{ backgroundColor: PALETTE.teal, borderColor: PALETTE.cyan }}
       borderColor={PALETTE.magenta}

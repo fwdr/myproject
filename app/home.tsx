@@ -6,7 +6,7 @@ import { useGame } from '../context/GameContext';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { highScore } = useGame();
+  const { highScore, startLevel } = useGame();
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
 
   if (!fontsLoaded) return null;
@@ -43,7 +43,7 @@ export default function HomeScreen() {
 
       <TouchableOpacity
         style={styles.playButton}
-        onPress={() => router.push('/level1')}
+        onPress={() => router.push(`/level${startLevel}`)}
         activeOpacity={0.8}
       >
         <Text style={[styles.playButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>

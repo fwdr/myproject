@@ -21,6 +21,7 @@ export default function Level5Screen() {
       config={LEVEL_5}
       initialScore={initialScore}
       levelLabel="L-05"
+      levelNumber={5}
       backgroundColor={PALETTE.navy}
       brickStyle={{ backgroundColor: PALETTE.red, borderColor: PALETTE.maroon }}
       onExit={onExit}

@@ -139,9 +139,11 @@ const galleryStyles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { soundEnabled, setSoundEnabled, resetHighScore } = useGame();
+  const { soundEnabled, setSoundEnabled, resetHighScore, unlockedLevel, startLevel, setStartLevel } =
+    useGame();
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
   const [spriteGalleryVisible, setSpriteGalleryVisible] = useState(false);
+  const [startLevelPickerVisible, setStartLevelPickerVisible] = useState(false);
 
   if (!fontsLoaded) return null;
 
@@ -162,7 +164,58 @@ export default function SettingsScreen() {
       }
       contentStyle={styles.content}
     >
-      <View style={styles.row}>
+      <TouchableOpacity
+        style={styles.row}
+        onPress={() => setStartLevelPickerVisible(true)}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>
+          Start from level
+        </Text>
+        <Text style={[styles.pickerValue, { fontFamily: 'PressStart2P_400Regular' }]}>
+          {startLevel} ▼
+        </Text>
+      </TouchableOpacity>
+
+      <Modal
+        visible={startLevelPickerVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setStartLevelPickerVisible(false)}
+      >
+        <Pressable
+          style={pickerStyles.backdrop}
+          onPress={() => setStartLevelPickerVisible(false)}
+        >
+          <Pressable style={pickerStyles.panel} onPress={(e) => e.stopPropagation()}>
+            <Text style={[pickerStyles.title, { fontFamily: 'PressStart2P_400Regular' }]}>
+              START FROM LEVEL
+            </Text>
+            {Array.from({ length: unlockedLevel }, (_, i) => i + 1).map((n) => (
+              <TouchableOpacity
+                key={n}
+                style={[pickerStyles.option, n === startLevel && pickerStyles.optionSelected]}
+                onPress={() => {
+                  setStartLevel(n);
+                  setStartLevelPickerVisible(false);
+                }}
+              >
+                <Text
+                  style={[
+                    pickerStyles.optionText,
+                    { fontFamily: 'PressStart2P_400Regular' },
+                    n === startLevel && pickerStyles.optionTextSelected,
+                  ]}
+                >
+                  Level {n}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      <View style={[styles.row, { marginTop: 12 }]}>
         <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Sound</Text>
         <Switch
           value={soundEnabled}
@@ -226,6 +279,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
   },
+  pickerValue: {
+    fontSize: 12,
+    color: '#00FFFF',
+  },
   label: {
     fontSize: 12,
     color: '#eee',
@@ -266,5 +323,49 @@ const styles = StyleSheet.create({
     marginTop: 32,
     fontSize: 10,
     color: '#555',
+  },
+});
+
+const pickerStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  panel: {
+    width: '100%',
+    maxWidth: 280,
+    backgroundColor: '#1a1a2e',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#00FFFF',
+    padding: 20,
+  },
+  title: {
+    fontSize: 12,
+    color: '#00FFFF',
+    letterSpacing: 1,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  option: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  optionSelected: {
+    backgroundColor: 'rgba(0, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: '#00FFFF',
+  },
+  optionText: {
+    fontSize: 12,
+    color: '#ccc',
+  },
+  optionTextSelected: {
+    color: '#00FFFF',
   },
 });

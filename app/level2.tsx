@@ -23,6 +23,7 @@ export default function Level2Screen() {
       config={LEVEL_2}
       initialScore={initialScore}
       levelLabel="L-02"
+      levelNumber={2}
       backgroundColor={L2_BG}
       brickStyle={{ backgroundColor: PALETTE.teal, borderColor: PALETTE.cyan }}
       borderColor={PALETTE.magenta}

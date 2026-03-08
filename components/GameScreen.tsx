@@ -32,6 +32,7 @@ type GameScreenProps = {
   config: LevelConfig;
   initialScore: number;
   levelLabel: string;
+  levelNumber: number;
   backgroundColor: string;
   brickStyle: { backgroundColor: string; borderColor: string };
   borderColor?: string;
@@ -43,6 +44,7 @@ export function GameScreen({
   config,
   initialScore,
   levelLabel,
+  levelNumber,
   backgroundColor,
   brickStyle,
   borderColor = PALETTE.cyan,
@@ -50,7 +52,7 @@ export function GameScreen({
   nextPath,
 }: GameScreenProps) {
   const router = useRouter();
-  const { setHighScore } = useGame();
+  const { setHighScore, recordLevelComplete } = useGame();
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', (e) => setDimensions(e.window));
@@ -103,12 +105,13 @@ export function GameScreen({
 
   const handleLevelComplete = useCallback(() => {
     setHighScore((prev) => Math.max(prev, score));
+    recordLevelComplete(levelNumber);
     if (nextPath) {
       router.replace({ pathname: nextPath, params: { score: String(score) } });
     } else {
       onExit(score);
     }
-  }, [setHighScore, score, nextPath, onExit, router]);
+  }, [setHighScore, recordLevelComplete, levelNumber, score, nextPath, onExit, router]);
 
   if (!fontsLoaded) return null;
 

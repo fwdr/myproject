@@ -21,6 +21,7 @@ export default function Level1Screen() {
       config={LEVEL_1}
       initialScore={initialScore}
       levelLabel="L-01"
+      levelNumber={1}
       backgroundColor={PALETTE.navy}
       brickStyle={{ backgroundColor: PALETTE.red, borderColor: PALETTE.maroon }}
       onExit={onExit}
