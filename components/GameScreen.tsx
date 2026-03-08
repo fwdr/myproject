@@ -54,7 +54,7 @@ export function GameScreen({
 }: GameScreenProps) {
   const router = useRouter();
   const { setHighScore, recordLevelComplete, soundEnabled } = useGame();
-  useBackgroundMusic(soundEnabled);
+  useBackgroundMusic(soundEnabled, levelNumber);
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', (e) => setDimensions(e.window));
