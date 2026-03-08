@@ -27,7 +27,7 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
     const setup = async () => {
       try {
         await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: false,
+          playsInSilentModeIOS: true, // Allow music when iPhone is in silent mode
           staysActiveInBackground: false,
           shouldDuckAndroid: true,
         });
@@ -40,6 +40,15 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
           return;
         }
 
+        soundRef.current = sound;
+
+        // Start playback first (seek/rate before play can fail on some platforms)
+        if (soundEnabledRef.current) {
+          await sound.setVolumeAsync(0);
+          await sound.playAsync();
+        }
+
+        // Apply rate and position after play has started
         const status = (await sound.getStatusAsync()) as AVPlaybackStatus;
         if (!status.isLoaded) return;
 
@@ -51,26 +60,15 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
           durationMs
         );
 
-        const rate = getPlaybackRate(levelNumber);
-        await sound.setRateAsync(rate, false);
-        await sound.setPositionAsync(regionStartMs);
-        await sound.setVolumeAsync(0);
-
-        // Poll for position (setOnPlaybackStatusUpdate often doesn't fire during playback on iOS/Android)
-        pollInterval = setInterval(async () => {
-          if (!mounted) return;
-          try {
-            const s = (await sound.getStatusAsync()) as AVPlaybackStatus;
-            if (s.isLoaded && s.isPlaying && s.positionMillis >= regionEndMs - 500) {
-              await sound.setPositionAsync(regionStartMs);
-            }
-          } catch (_) {}
-        }, 500);
-
-        soundRef.current = sound;
+        try {
+          await sound.setRateAsync(getPlaybackRate(levelNumber), false);
+        } catch (_) {}
+        try {
+          await sound.setPositionAsync(regionStartMs);
+        } catch (_) {}
 
         if (soundEnabledRef.current) {
-          await sound.playAsync();
+          await sound.setVolumeAsync(0);
           let elapsed = 0;
           fadeInterval = setInterval(async () => {
             elapsed += FADE_STEP_MS;
@@ -84,6 +82,17 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
             }
           }, FADE_STEP_MS);
         }
+
+        // Poll for loop region (setOnPlaybackStatusUpdate often doesn't fire during playback)
+        pollInterval = setInterval(async () => {
+          if (!mounted) return;
+          try {
+            const s = (await sound.getStatusAsync()) as AVPlaybackStatus;
+            if (s.isLoaded && s.isPlaying && s.positionMillis >= regionEndMs - 500) {
+              await sound.setPositionAsync(regionStartMs);
+            }
+          } catch (_) {}
+        }, 500);
       } catch (e) {
         console.warn('Background music failed to load:', e);
       }
