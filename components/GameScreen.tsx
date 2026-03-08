@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useGame } from '../context/GameContext';
+import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 import { ScreenLayout, MENU_BAR_HEIGHT } from './ScreenLayout';
 import { BrickWall } from './BrickWall';
 import { useGameLoop } from '../hooks/useGameLoop';
@@ -52,7 +53,8 @@ export function GameScreen({
   nextPath,
 }: GameScreenProps) {
   const router = useRouter();
-  const { setHighScore, recordLevelComplete } = useGame();
+  const { setHighScore, recordLevelComplete, soundEnabled } = useGame();
+  useBackgroundMusic(soundEnabled);
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', (e) => setDimensions(e.window));
