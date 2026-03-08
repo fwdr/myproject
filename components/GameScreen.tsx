@@ -13,6 +13,7 @@ import { useGame } from '../context/GameContext';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 import { ScreenLayout, MENU_BAR_HEIGHT } from './ScreenLayout';
 import { BrickWall } from './BrickWall';
+import { AmbientParticles, getParticleStyleForLevel } from './AmbientParticles';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
 import { PowerupSprite } from './sprites/PowerupSprite';
@@ -188,6 +189,13 @@ export function GameScreen({
       )}
 
       <View style={[styles.playAreaWrapper, { height: playAreaHeight }]}>
+        <View style={[styles.particleLayer, { width: innerWidth, height: innerHeight }]}>
+          <AmbientParticles
+            styleId={getParticleStyleForLevel(levelNumber)}
+            width={innerWidth}
+            height={innerHeight}
+          />
+        </View>
         <BrickWall
           width={dimensions.width}
           innerHeight={innerHeight}
@@ -306,7 +314,13 @@ const styles = StyleSheet.create({
     borderColor: PALETTE.cyan,
   },
   buttonText: { fontSize: 12, color: PALETTE.cyan, letterSpacing: 1 },
-  playAreaWrapper: { flex: 1, width: '100%' },
+  playAreaWrapper: { flex: 1, width: '100%', position: 'relative' },
+  particleLayer: {
+    position: 'absolute',
+    left: BRICK_W,
+    top: BRICK_H,
+    zIndex: 1,
+  },
   playArea: {
     position: 'absolute',
     left: BRICK_W,
