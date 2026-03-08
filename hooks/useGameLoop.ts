@@ -466,19 +466,32 @@ export function useGameLoop(
       const mdy = dy * invD * missileSpeed;
       const dualMode = Date.now() < dualMissileUntilRef.current;
       const bigMode = Date.now() < bigMissileUntilRef.current;
-      const baseMissile = (ox: number, oy: number): Missile =>
-        bigMode
+      const baseMissile = (ox: number, oy: number): Missile => {
+        const sx = g.x + ox;
+        const sy = g.y + oy;
+        return bigMode
           ? {
               id: ++missileIdRef.current,
-              x: g.x + ox,
-              y: g.y + oy,
+              x: sx,
+              y: sy,
               dx: mdx,
               dy: mdy,
               damage: 3,
               hitRadius: BIG_MISSILE_HIT_RADIUS,
               size: BIG_MISSILE_SIZE,
+              spawnX: sx,
+              spawnY: sy,
             }
-          : { id: ++missileIdRef.current, x: g.x + ox, y: g.y + oy, dx: mdx, dy: mdy };
+          : {
+              id: ++missileIdRef.current,
+              x: sx,
+              y: sy,
+              dx: mdx,
+              dy: mdy,
+              spawnX: sx,
+              spawnY: sy,
+            };
+      };
       if (dualMode) {
         const perpX = -dy * invD * DUAL_MISSILE_OFFSET;
         const perpY = dx * invD * DUAL_MISSILE_OFFSET;

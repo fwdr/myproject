@@ -11,6 +11,8 @@ export type Missile = {
   damage?: number;
   hitRadius?: number;
   size?: number;
+  spawnX?: number;
+  spawnY?: number;
 };
 export type Enemy = {
   id: number;

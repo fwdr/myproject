@@ -18,6 +18,8 @@ import { AmbientParticles, getParticleStyleForLevel } from './AmbientParticles';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
 import { EnemyWithEffects } from './EnemyWithEffects';
+import { ObstacleSprite } from './ObstacleSprite';
+import { LevelIntro } from './LevelIntro';
 import { PowerupSprite } from './sprites/PowerupSprite';
 import { Powerup2Sprite } from './sprites/Powerup2Sprite';
 import { GunSprite } from './sprites/GunSprite';
@@ -27,7 +29,6 @@ import {
   BRICK_W,
   BRICK_H,
   INITIAL_LIVES,
-  STATIC_OBSTACLE_RADIUS,
   PALETTE,
 } from '../lib/gameConstants';
 import type { LevelConfig } from '../config/levels/level1';
@@ -161,6 +162,7 @@ export function GameScreen({
       }
       contentStyle={styles.content}
     >
+      <LevelIntro levelNumber={levelNumber} />
       {!gameActive && (
         <View style={styles.overlay}>
           <Text style={[styles.gameOverText, { fontFamily: 'PressStart2P_400Regular' }]}>
@@ -248,37 +250,35 @@ export function GameScreen({
             )
           )}
           {obstaclePositions.map((o, i) => (
-            <View
-              key={i}
-              style={[
-                styles.obstacle,
-                {
-                  left: o.x - STATIC_OBSTACLE_RADIUS,
-                  top: o.y - STATIC_OBSTACLE_RADIUS,
-                },
-              ]}
-            />
+            <ObstacleSprite key={i} x={o.x} y={o.y} index={i} />
           ))}
           {missiles.flatMap((m) => {
             const size = m.size ?? MISSILE_SIZE;
             const trailSteps = [3, 6, 9, 12];
             const trailOpacity = [0.5, 0.35, 0.2, 0.08];
-            const trails = trailSteps.map((step, i) => (
-              <View
-                key={`${m.id}-trail-${i}`}
-                style={[
-                  styles.missileTrail,
-                  {
-                    left: m.x - size / 2 - m.dx * step,
-                    top: m.y - size / 2 - m.dy * step,
-                    width: size,
-                    height: size,
-                    borderRadius: size / 2,
-                    opacity: trailOpacity[i],
-                  },
-                ]}
-              />
-            ));
+            const speed = Math.hypot(m.dx, m.dy) || 1;
+            const maxDist =
+              m.spawnX != null && m.spawnY != null
+                ? Math.hypot(m.x - m.spawnX, m.y - m.spawnY)
+                : Infinity;
+            const trails = trailSteps
+              .filter((step) => step * speed < maxDist)
+              .map((step, i) => (
+                <View
+                  key={`${m.id}-trail-${i}`}
+                  style={[
+                    styles.missileTrail,
+                    {
+                      left: m.x - size / 2 - m.dx * step,
+                      top: m.y - size / 2 - m.dy * step,
+                      width: size,
+                      height: size,
+                      borderRadius: size / 2,
+                      opacity: trailOpacity[i],
+                    },
+                  ]}
+                />
+              ));
             return [
               ...trails,
               <View
@@ -361,15 +361,6 @@ const styles = StyleSheet.create({
     height: GUN_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  obstacle: {
-    position: 'absolute',
-    width: STATIC_OBSTACLE_RADIUS * 2,
-    height: STATIC_OBSTACLE_RADIUS * 2,
-    borderRadius: STATIC_OBSTACLE_RADIUS,
-    backgroundColor: PALETTE.gray,
-    borderWidth: 2,
-    borderColor: PALETTE.silver,
   },
   missile: {
     position: 'absolute',
