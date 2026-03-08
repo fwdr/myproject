@@ -255,7 +255,7 @@ export default function SettingsScreen() {
       </View>
 
       <View style={[styles.row, { marginTop: 12 }]}>
-        <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Sound</Text>
+        <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Music</Text>
         <Switch
           value={soundEnabled}
           onValueChange={setSoundEnabled}
