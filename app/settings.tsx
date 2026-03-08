@@ -218,7 +218,7 @@ export default function SettingsScreen() {
               START FROM LEVEL
             </Text>
             {Array.from(
-              { length: testMode ? 5 : unlockedLevel },
+              { length: testMode ? 20 : unlockedLevel },
               (_, i) => i + 1
             ).map((n) => (
               <TouchableOpacity

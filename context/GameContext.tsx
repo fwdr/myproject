@@ -9,7 +9,7 @@ const STORAGE_KEYS = {
   TEST_MODE: '@game/testMode',
 } as const;
 
-const MAX_LEVEL = 5;
+const MAX_LEVEL = 20;
 
 type GameContextValue = {
   soundEnabled: boolean;
