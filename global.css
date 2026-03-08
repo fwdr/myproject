@@ -1,0 +1,7 @@
+/* Prevent text/element selection and iOS callout on touch (iPhone web) */
+* {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}

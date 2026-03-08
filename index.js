@@ -1,5 +1,6 @@
 // Custom entry so web bundle can resolve the app directory (fixes EXPO_ROUTER_APP_ROOT).
 import '@expo/metro-runtime';
+import './global.css';
 import React from 'react';
 import { ExpoRoot } from 'expo-router/build/ExpoRoot';
 import { renderRootComponent } from 'expo-router/build/renderRootComponent';
