@@ -1,15 +1,51 @@
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { ScreenLayout } from '../components/ScreenLayout';
 import { useGame } from '../context/GameContext';
+import { ENEMY_TYPES } from '../config/enemyTypes';
+import type { EnemyTypeId } from '../config/enemyTypes';
+
+const ORBIT_SIZE = 320;
+const ORBIT_RADIUS_MIN = 90;
+const ORBIT_RADIUS_MAX = 130;
+const ENEMY_COUNT = 8;
+const ORBIT_SPEED = 0.4;
+const PULSE_SPEED = 2;
 
 export default function HomeScreen() {
   const router = useRouter();
   const { highScore, startLevel } = useGame();
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
+  const [angle, setAngle] = useState(0);
+  const [radius, setRadius] = useState(ORBIT_RADIUS_MIN);
+  const rafRef = useRef<number | null>(null);
+  const lastRef = useRef<number>(0);
+  const totalTimeRef = useRef<number>(0);
+
+  useEffect(() => {
+    const tick = (now: number) => {
+      const dt = (now - lastRef.current) / 1000;
+      lastRef.current = now;
+      totalTimeRef.current += dt;
+      setAngle((a) => (a + ORBIT_SPEED * dt) % (Math.PI * 2));
+      const pulse = 0.5 + 0.5 * Math.sin(totalTimeRef.current * PULSE_SPEED);
+      const r = ORBIT_RADIUS_MIN + pulse * (ORBIT_RADIUS_MAX - ORBIT_RADIUS_MIN);
+      setRadius(r);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    lastRef.current = performance.now();
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   if (!fontsLoaded) return null;
+
+  const center = ORBIT_SIZE / 2;
+  const enemyIds: EnemyTypeId[] = ['type1', 'type2', 'type3', 'type4', 'type5', 'type6', 'type7', 'type8'];
 
   return (
     <ScreenLayout
@@ -33,65 +69,75 @@ export default function HomeScreen() {
       }
       contentStyle={styles.content}
     >
-      <View style={styles.graphicContainer}>
-        <View style={styles.graphicPlaceholder}>
-          <Text style={[styles.graphicText, { fontFamily: 'PressStart2P_400Regular' }]}>
-            Your graphic here
-          </Text>
+      <View style={styles.orbitContainer}>
+        <View style={styles.orbitArea}>
+          {enemyIds.slice(0, ENEMY_COUNT).map((typeId, i) => {
+            const offset = (Math.PI * 2 * i) / ENEMY_COUNT;
+            const a = angle + offset;
+            const x = center + radius * Math.cos(a);
+            const y = center + radius * Math.sin(a);
+            const def = ENEMY_TYPES[typeId];
+            const Sprite = def.Sprite;
+            return (
+              <View
+                key={i}
+                pointerEvents="none"
+                style={[styles.orbitEnemy, { left: x - 12, top: y - 12 }]}
+              >
+                <Sprite x={12} y={12} />
+              </View>
+            );
+          })}
+          <TouchableOpacity
+            style={styles.startButton}
+            onPress={() => router.push(`/level${startLevel}`)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.startButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
+              START
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
-
-      <TouchableOpacity
-        style={styles.playButton}
-        onPress={() => router.push(`/level${startLevel}`)}
-        activeOpacity={0.8}
-      >
-        <Text style={[styles.playButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-          PLAY
-        </Text>
-      </TouchableOpacity>
     </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
+    flex: 1,
     paddingTop: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  graphicContainer: {
+  orbitContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: 200,
   },
-  graphicPlaceholder: {
-    width: '100%',
-    aspectRatio: 1,
-    maxWidth: 280,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderStyle: 'dashed',
-    justifyContent: 'center',
+  orbitArea: {
+    width: ORBIT_SIZE,
+    height: ORBIT_SIZE,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  graphicText: {
-    fontSize: 10,
-    color: '#666',
-    letterSpacing: 1,
+  orbitEnemy: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
   },
-  playButton: {
-    backgroundColor: '#4ade80',
-    paddingVertical: 10,
+  startButton: {
+    width: 140,
+    paddingVertical: 16,
     paddingHorizontal: 28,
-    borderWidth: 2,
+    backgroundColor: '#4ade80',
+    borderWidth: 3,
     borderColor: '#22c55e',
     alignItems: 'center',
-    marginBottom: 24,
+    justifyContent: 'center',
   },
-  playButtonText: {
-    fontSize: 14,
+  startButtonText: {
+    fontSize: 18,
     color: '#1a1a2e',
     letterSpacing: 2,
   },
