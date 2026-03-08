@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 
-const REGION_DURATION_MS = 90_000; // 90 seconds per loop region
+const REGION_DURATION_MS = 45_000; // 45 seconds per loop region (works for ~1min+ tracks)
+const REGION_STEP_MS = 8_000; // 8 seconds between level start offsets
 const FADE_UP_MS = 1500;
 const FADE_STEP_MS = 50;
 
@@ -42,12 +43,9 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
         const status = (await sound.getStatusAsync()) as AVPlaybackStatus;
         if (!status.isLoaded) return;
 
-        const durationMs = status.durationMillis ?? 180_000;
-        const maxStart = Math.max(0, durationMs - REGION_DURATION_MS);
-        const regionStartMs =
-          maxStart > 0
-            ? (((levelNumber - 1) * 35_000) % maxStart)
-            : 0;
+        const durationMs = status.durationMillis ?? 120_000;
+        const maxStart = Math.max(REGION_STEP_MS, durationMs - REGION_DURATION_MS);
+        const regionStartMs = ((levelNumber - 1) * REGION_STEP_MS) % maxStart;
         const regionEndMs = Math.min(
           regionStartMs + REGION_DURATION_MS,
           durationMs
