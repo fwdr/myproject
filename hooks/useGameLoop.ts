@@ -63,6 +63,7 @@ export function useGameLoop(
   const onLevelCompleteRef = useRef(onLevelComplete);
   const currentWaveIndexRef = useRef(currentWaveIndex);
   const levelStartTimeRef = useRef<number>(0);
+  const gunRespawnAtRef = useRef<number>(0);
   onLevelCompleteRef.current = onLevelComplete;
   currentWaveIndexRef.current = currentWaveIndex;
 
@@ -239,7 +240,18 @@ export function useGameLoop(
     const waves = config.waves;
     const tick = () => {
       const { width, height } = dimensionsRef.current;
-      const g = gunRef.current;
+      let g = gunRef.current;
+
+      if (!g && gunRespawnAtRef.current > 0 && Date.now() >= gunRespawnAtRef.current) {
+        gunRespawnAtRef.current = 0;
+        const padding = GUN_SIZE + 10;
+        const nx = padding + Math.random() * (width - padding * 2);
+        const ny = padding + Math.random() * (height - padding * 2);
+        const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
+        gunRef.current = ng;
+        setGun(ng);
+        g = ng;
+      }
 
       const idx = currentWaveIndexRef.current;
       if (idx < waves.length) {
@@ -352,14 +364,7 @@ export function useGameLoop(
               setGun(null);
               gunRef.current = null;
               if (newLives > 0) {
-                const padding = GUN_SIZE + 10;
-                const nx = padding + Math.random() * (width - padding * 2);
-                const ny = padding + Math.random() * (height - padding * 2);
-                setTimeout(() => {
-                  const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
-                  gunRef.current = ng;
-                  setGun(ng);
-                }, 500);
+                gunRespawnAtRef.current = Date.now() + 500;
               }
               break;
             }

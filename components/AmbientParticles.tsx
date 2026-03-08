@@ -205,8 +205,8 @@ export function AmbientParticles({ styleId, width, height }: AmbientParticlesPro
     const interval = setInterval(() => {
       setParticles((prev) =>
         prev.map((p) => {
-          const x = p.x + p.vx;
-          const y = p.y + p.vy;
+          let x = p.x + p.vx;
+          let y = p.y + p.vy;
           if (x < -5) x = width + 5;
           if (x > width + 5) x = -5;
           if (y < -5) y = height + 5;
