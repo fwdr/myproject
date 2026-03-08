@@ -21,6 +21,8 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
     let mounted = true;
     let fadeInterval: ReturnType<typeof setInterval> | null = null;
 
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
     const setup = async () => {
       try {
         await Audio.setAudioModeAsync({
@@ -30,7 +32,7 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
         });
         const { sound } = await Audio.Sound.createAsync(
           require('../assets/PixelDogfight.mp3'),
-          { isLooping: false, progressUpdateIntervalMillis: 500 }
+          { isLooping: false }
         );
         if (!mounted) {
           await sound.unloadAsync();
@@ -56,13 +58,16 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
         await sound.setPositionAsync(regionStartMs);
         await sound.setVolumeAsync(0);
 
-        sound.setOnPlaybackStatusUpdate((s: AVPlaybackStatus) => {
-          if (!s.isLoaded || !mounted) return;
-          const pos = s.positionMillis;
-          if (pos >= regionEndMs - 500) {
-            sound.setPositionAsync(regionStartMs).catch(() => {});
-          }
-        });
+        // Poll for position (setOnPlaybackStatusUpdate often doesn't fire during playback on iOS/Android)
+        pollInterval = setInterval(async () => {
+          if (!mounted) return;
+          try {
+            const s = (await sound.getStatusAsync()) as AVPlaybackStatus;
+            if (s.isLoaded && s.isPlaying && s.positionMillis >= regionEndMs - 500) {
+              await sound.setPositionAsync(regionStartMs);
+            }
+          } catch (_) {}
+        }, 500);
 
         soundRef.current = sound;
 
@@ -90,6 +95,7 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
     return () => {
       mounted = false;
       if (fadeInterval) clearInterval(fadeInterval);
+      if (pollInterval) clearInterval(pollInterval);
       soundRef.current?.unloadAsync().catch(() => {});
       soundRef.current = null;
     };
