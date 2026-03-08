@@ -139,8 +139,16 @@ const galleryStyles = StyleSheet.create({
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { soundEnabled, setSoundEnabled, resetHighScore, unlockedLevel, startLevel, setStartLevel } =
-    useGame();
+  const {
+    soundEnabled,
+    setSoundEnabled,
+    resetHighScore,
+    unlockedLevel,
+    startLevel,
+    setStartLevel,
+    testMode,
+    setTestMode,
+  } = useGame();
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
   const [spriteGalleryVisible, setSpriteGalleryVisible] = useState(false);
   const [startLevelPickerVisible, setStartLevelPickerVisible] = useState(false);
@@ -191,7 +199,10 @@ export default function SettingsScreen() {
             <Text style={[pickerStyles.title, { fontFamily: 'PressStart2P_400Regular' }]}>
               START FROM LEVEL
             </Text>
-            {Array.from({ length: unlockedLevel }, (_, i) => i + 1).map((n) => (
+            {Array.from(
+              { length: testMode ? 5 : unlockedLevel },
+              (_, i) => i + 1
+            ).map((n) => (
               <TouchableOpacity
                 key={n}
                 style={[pickerStyles.option, n === startLevel && pickerStyles.optionSelected]}
@@ -214,6 +225,16 @@ export default function SettingsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <View style={[styles.row, { marginTop: 12 }]}>
+        <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Test mode</Text>
+        <Switch
+          value={testMode}
+          onValueChange={setTestMode}
+          trackColor={{ false: '#444', true: '#4ade80' }}
+          thumbColor="#fff"
+        />
+      </View>
 
       <View style={[styles.row, { marginTop: 12 }]}>
         <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Sound</Text>

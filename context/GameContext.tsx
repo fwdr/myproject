@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   HIGH_SCORE: '@game/highScore',
   UNLOCKED_LEVEL: '@game/unlockedLevel',
   START_LEVEL: '@game/startLevel',
+  TEST_MODE: '@game/testMode',
 } as const;
 
 const MAX_LEVEL = 5;
@@ -20,6 +21,8 @@ type GameContextValue = {
   recordLevelComplete: (levelNumber: number) => void;
   startLevel: number;
   setStartLevel: (value: number) => void;
+  testMode: boolean;
+  setTestMode: (value: boolean) => void;
   isLoading: boolean;
 };
 
@@ -30,16 +33,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [highScore, setHighScoreState] = useState(0);
   const [unlockedLevel, setUnlockedLevelState] = useState(1);
   const [startLevel, setStartLevelState] = useState(1);
+  const [testMode, setTestModeState] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
-        const [sound, score, unlocked, start] = await Promise.all([
+        const [sound, score, unlocked, start, testModeStored] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEYS.SOUND_ENABLED),
           AsyncStorage.getItem(STORAGE_KEYS.HIGH_SCORE),
           AsyncStorage.getItem(STORAGE_KEYS.UNLOCKED_LEVEL),
           AsyncStorage.getItem(STORAGE_KEYS.START_LEVEL),
+          AsyncStorage.getItem(STORAGE_KEYS.TEST_MODE),
         ]);
         if (sound !== null) setSoundEnabledState(sound === 'true');
         if (score !== null) setHighScoreState(parseInt(score, 10) || 0);
@@ -47,6 +52,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         const st = start !== null ? Math.min(MAX_LEVEL, Math.max(1, parseInt(start, 10) || 1)) : 1;
         setUnlockedLevelState(u);
         setStartLevelState(Math.min(st, u));
+        if (testModeStored !== null) setTestModeState(testModeStored === 'true');
       } finally {
         setIsLoading(false);
       }
@@ -90,6 +96,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem(STORAGE_KEYS.START_LEVEL, String(clamped));
   }, []);
 
+  const setTestMode = useCallback(async (value: boolean) => {
+    setTestModeState(value);
+    await AsyncStorage.setItem(STORAGE_KEYS.TEST_MODE, String(value));
+  }, []);
+
   return (
     <GameContext.Provider
       value={{
@@ -102,6 +113,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         recordLevelComplete,
         startLevel,
         setStartLevel,
+        testMode,
+        setTestMode,
         isLoading,
       }}
     >
