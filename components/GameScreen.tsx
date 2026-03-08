@@ -17,6 +17,7 @@ import { getBrickStyleForLevel } from '../config/brickStyles';
 import { AmbientParticles, getParticleStyleForLevel } from './AmbientParticles';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
+import { EnemyWithEffects } from './EnemyWithEffects';
 import { PowerupSprite } from './sprites/PowerupSprite';
 import { Powerup2Sprite } from './sprites/Powerup2Sprite';
 import { GunSprite } from './sprites/GunSprite';
@@ -230,8 +231,14 @@ export function GameScreen({
           )}
           {enemies.map((e) => {
             const def = getEnemyType(e.typeId);
-            const Sprite = def.Sprite;
-            return <Sprite key={e.id} x={e.x} y={e.y} />;
+            return (
+              <EnemyWithEffects
+                key={e.id}
+                enemy={e}
+                Sprite={def.Sprite}
+                radius={def.radius}
+              />
+            );
           })}
           {powerups.map((p) =>
             p.typeId === 'big' ? (
@@ -252,9 +259,28 @@ export function GameScreen({
               ]}
             />
           ))}
-          {missiles.map((m) => {
+          {missiles.flatMap((m) => {
             const size = m.size ?? MISSILE_SIZE;
-            return (
+            const trailSteps = [3, 6, 9, 12];
+            const trailOpacity = [0.5, 0.35, 0.2, 0.08];
+            const trails = trailSteps.map((step, i) => (
+              <View
+                key={`${m.id}-trail-${i}`}
+                style={[
+                  styles.missileTrail,
+                  {
+                    left: m.x - size / 2 - m.dx * step,
+                    top: m.y - size / 2 - m.dy * step,
+                    width: size,
+                    height: size,
+                    borderRadius: size / 2,
+                    opacity: trailOpacity[i],
+                  },
+                ]}
+              />
+            ));
+            return [
+              ...trails,
               <View
                 key={m.id}
                 style={[
@@ -267,8 +293,8 @@ export function GameScreen({
                     borderRadius: size / 2,
                   },
                 ]}
-              />
-            );
+              />,
+            ];
           })}
         </Pressable>
       </View>
@@ -350,6 +376,10 @@ const styles = StyleSheet.create({
     width: MISSILE_SIZE,
     height: MISSILE_SIZE,
     borderRadius: MISSILE_SIZE / 2,
+    backgroundColor: PALETTE.yellow,
+  },
+  missileTrail: {
+    position: 'absolute',
     backgroundColor: PALETTE.yellow,
   },
 });

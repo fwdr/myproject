@@ -12,5 +12,13 @@ export type Missile = {
   hitRadius?: number;
   size?: number;
 };
-export type Enemy = { id: number; typeId: EnemyTypeId; x: number; y: number; health: number };
+export type Enemy = {
+  id: number;
+  typeId: EnemyTypeId;
+  x: number;
+  y: number;
+  health: number;
+  spawnTime?: number;
+  lastDamageAt?: number;
+};
 export type Powerup = { id: number; x: number; y: number; typeId: PowerupTypeId };

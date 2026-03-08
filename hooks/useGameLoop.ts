@@ -145,6 +145,7 @@ export function useGameLoop(
             x,
             y,
             health: def.health,
+            spawnTime: Date.now(),
           };
           if (delay === 0) {
             setEnemies((prev) => [...prev, newEnemy]);
@@ -169,6 +170,7 @@ export function useGameLoop(
           x,
           y,
           health: def.health,
+          spawnTime: Date.now(),
         });
       }
     }
@@ -394,7 +396,12 @@ export function useGameLoop(
           const r = getEnemyType(e.typeId).radius;
           const def = getEnemyType(e.typeId);
           if (hitTest(m.x, m.y, hitRadius, e.x, e.y, r)) {
-            const damaged = { ...e, health: Math.max(0, e.health - damage) };
+            const newHealth = Math.max(0, e.health - damage);
+            const damaged = {
+              ...e,
+              health: newHealth,
+              ...(newHealth > 0 && { lastDamageAt: Date.now() }),
+            };
             if (damaged.health <= 0) scoreDelta += def.points;
             enemiesAfterHits = [
               ...enemiesAfterHits.slice(0, i),
