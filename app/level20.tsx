@@ -23,7 +23,6 @@ export default function Level20Screen() {
       levelLabel="L-20"
       levelNumber={20}
       backgroundColor="#0a0520"
-      brickStyle={{ backgroundColor: PALETTE.magenta, borderColor: PALETTE.yellow }}
       borderColor={PALETTE.yellow}
       onExit={onExit}
     />

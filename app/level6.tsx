@@ -23,7 +23,6 @@ export default function Level6Screen() {
       levelLabel="L-06"
       levelNumber={6}
       backgroundColor={PALETTE.navy}
-      brickStyle={{ backgroundColor: PALETTE.teal, borderColor: PALETTE.cyan }}
       borderColor={PALETTE.cyan}
       onExit={onExit}
       nextPath="/level7"

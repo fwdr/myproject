@@ -13,6 +13,7 @@ import { useGame } from '../context/GameContext';
 import { useBackgroundMusic } from '../hooks/useBackgroundMusic';
 import { ScreenLayout, MENU_BAR_HEIGHT } from './ScreenLayout';
 import { BrickWall } from './BrickWall';
+import { getBrickStyleForLevel } from '../config/brickStyles';
 import { AmbientParticles, getParticleStyleForLevel } from './AmbientParticles';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
@@ -36,7 +37,7 @@ type GameScreenProps = {
   levelLabel: string;
   levelNumber: number;
   backgroundColor: string;
-  brickStyle: { backgroundColor: string; borderColor: string };
+  brickStyle?: { backgroundColor: string; borderColor: string };
   borderColor?: string;
   onExit: (score: number) => void;
   nextPath?: string;
@@ -48,11 +49,12 @@ export function GameScreen({
   levelLabel,
   levelNumber,
   backgroundColor,
-  brickStyle,
+  brickStyle: brickStyleProp,
   borderColor = PALETTE.cyan,
   onExit,
   nextPath,
 }: GameScreenProps) {
+  const brickStyle = brickStyleProp ?? getBrickStyleForLevel(levelNumber);
   const router = useRouter();
   const { setHighScore, recordLevelComplete, soundEnabled } = useGame();
   useBackgroundMusic(soundEnabled, levelNumber);

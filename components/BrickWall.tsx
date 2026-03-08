@@ -1,16 +1,15 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import type { TunnelType } from '../config/levels/level1';
+import type { BrickStyleConfig } from '../config/brickStyles';
 import { BRICK_W, BRICK_H, MORTAR, GAP_HEIGHT, GAP_WIDTH } from '../lib/gameConstants';
-
-type BrickStyle = { backgroundColor: string; borderColor: string };
 
 type BrickWallProps = {
   width: number;
   innerWidth?: number;
   innerHeight: number;
   tunnel?: TunnelType;
-  brickStyle?: BrickStyle;
+  brickStyle?: BrickStyleConfig;
 };
 
 export function BrickWall({
@@ -19,6 +18,19 @@ export function BrickWall({
   tunnel = 'none',
   brickStyle = { backgroundColor: '#800000', borderColor: '#FF0000' },
 }: BrickWallProps) {
+  const brickBaseStyle = {
+    backgroundColor: brickStyle.backgroundColor,
+    borderColor: brickStyle.borderColor,
+    borderWidth: brickStyle.borderWidth ?? 1,
+    ...(brickStyle.glowColor && {
+      shadowColor: brickStyle.glowColor,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: brickStyle.glowOpacity ?? 0.4,
+      shadowRadius: brickStyle.glowRadius ?? 2,
+      elevation: Math.min(8, (brickStyle.glowRadius ?? 2) * 2),
+    }),
+  };
+
   const topN = Math.ceil(width / BRICK_W) + 2;
   const sideHeight = innerHeight;
   const sideN = Math.ceil(sideHeight / BRICK_H);
@@ -35,14 +47,14 @@ export function BrickWall({
       key={key}
       style={[
         styles.brickHorizontal,
-        brickStyle,
+        brickBaseStyle,
         offset !== undefined && { marginLeft: offset },
       ]}
     />
   );
 
   const brickVert = (key: string) => (
-    <View key={key} style={[styles.brick, brickStyle]} />
+    <View key={key} style={[styles.brick, brickBaseStyle]} />
   );
 
   const renderSideColumn = (prefix: string) => (
