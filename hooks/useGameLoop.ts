@@ -1,4 +1,5 @@
 import type { NativeSyntheticEvent, NativeTouchEvent } from 'react-native';
+import { Platform } from 'react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   GUN_SIZE,
@@ -66,6 +67,14 @@ export function useGameLoop(
   currentWaveIndexRef.current = currentWaveIndex;
 
   dimensionsRef.current = { width: innerWidth, height: innerHeight };
+
+  const isMobileWeb =
+    Platform.OS === 'web' && (innerWidth < 500 || innerHeight < 500);
+  const calmFactor = isMobileWeb ? 0.75 : 1;
+  const enemySpeed = ENEMY_SPEED * calmFactor;
+  const missileSpeed = MISSILE_SPEED * calmFactor;
+  const gunSpeedBase = GUN_SPEED * calmFactor;
+  const waveTimeoutMultiplier = isMobileWeb ? 1.33 : 1;
 
   const obstaclePositions = useMemo(() => {
     const obs = config.staticObstacles ?? [];
@@ -235,7 +244,8 @@ export function useGameLoop(
       const idx = currentWaveIndexRef.current;
       if (idx < waves.length) {
         const elapsed = Date.now() - levelStartTimeRef.current;
-        const waveTimeoutMs = config.waveTimeoutMs ?? WAVE_TIMEOUT_MS;
+        const waveTimeoutMs =
+          (config.waveTimeoutMs ?? WAVE_TIMEOUT_MS) * waveTimeoutMultiplier;
         const timeBasedWave = Math.floor(elapsed / waveTimeoutMs);
         const targetWave = Math.min(timeBasedWave, waves.length - 1);
         if (idx < targetWave) {
@@ -252,8 +262,8 @@ export function useGameLoop(
         const dy = target.y - e.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < 0.01) return e;
-        const vx = (dx / dist) * ENEMY_SPEED;
-        const vy = (dy / dist) * ENEMY_SPEED;
+        const vx = (dx / dist) * enemySpeed;
+        const vy = (dy / dist) * enemySpeed;
         const r = getEnemyType(e.typeId).radius;
         const pad = r + 2;
         let nx = e.x + vx;
