@@ -320,6 +320,7 @@ const styles = StyleSheet.create({
     left: BRICK_W,
     top: BRICK_H,
     zIndex: 1,
+    pointerEvents: 'none',
   },
   playArea: {
     position: 'absolute',

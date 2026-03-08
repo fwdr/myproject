@@ -422,7 +422,7 @@ export function useGameLoop(
 
   const [gameAreaLayout, setGameAreaLayout] = useState({ x: 0, y: 0 });
   const gameAreaLayoutRef = useRef({ x: 0, y: 0 });
-  gameAreaLayoutRef.current = gameAreaLayout;
+  gameAreaLayoutRef.current = { x: gameAreaLayout.x, y: gameAreaLayout.y };
 
   const handleTap = useCallback(
     (e: NativeSyntheticEvent<NativeTouchEvent>) => {
