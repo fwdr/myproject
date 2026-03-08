@@ -3,8 +3,24 @@ import { Enemy1Sprite } from '../components/sprites/Enemy1Sprite';
 import { Enemy2Sprite } from '../components/sprites/Enemy2Sprite';
 import { Enemy3Sprite } from '../components/sprites/Enemy3Sprite';
 import { Enemy4Sprite } from '../components/sprites/Enemy4Sprite';
+import { Enemy5Sprite } from '../components/sprites/Enemy5Sprite';
+import { Enemy6Sprite } from '../components/sprites/Enemy6Sprite';
+import { Enemy7Sprite } from '../components/sprites/Enemy7Sprite';
+import { Enemy8Sprite } from '../components/sprites/Enemy8Sprite';
+import { Enemy9Sprite } from '../components/sprites/Enemy9Sprite';
+import { Enemy10Sprite } from '../components/sprites/Enemy10Sprite';
 
-export type EnemyTypeId = 'type1' | 'type2' | 'type3' | 'type4';
+export type EnemyTypeId =
+  | 'type1'
+  | 'type2'
+  | 'type3'
+  | 'type4'
+  | 'type5'
+  | 'type6'
+  | 'type7'
+  | 'type8'
+  | 'type9'
+  | 'type10';
 
 export type EnemyTypeDef = {
   id: EnemyTypeId;
@@ -42,6 +58,48 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
     points: 5,
     radius: 10,
     Sprite: Enemy4Sprite,
+  },
+  type5: {
+    id: 'type5',
+    health: 4,
+    points: 25,
+    radius: 12,
+    Sprite: Enemy5Sprite,
+  },
+  type6: {
+    id: 'type6',
+    health: 6,
+    points: 30,
+    radius: 12,
+    Sprite: Enemy6Sprite,
+  },
+  type7: {
+    id: 'type7',
+    health: 5,
+    points: 28,
+    radius: 12,
+    Sprite: Enemy7Sprite,
+  },
+  type8: {
+    id: 'type8',
+    health: 4,
+    points: 22,
+    radius: 12,
+    Sprite: Enemy8Sprite,
+  },
+  type9: {
+    id: 'type9',
+    health: 8,
+    points: 50,
+    radius: 12,
+    Sprite: Enemy9Sprite,
+  },
+  type10: {
+    id: 'type10',
+    health: 3,
+    points: 35,
+    radius: 12,
+    Sprite: Enemy10Sprite,
   },
 };
 
