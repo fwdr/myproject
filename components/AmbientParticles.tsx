@@ -173,8 +173,8 @@ function createParticles(
       id: i,
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+      vx,
+      vy,
       size,
       color: def.colors[Math.floor(Math.random() * def.colors.length)],
       opacity:
