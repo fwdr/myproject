@@ -53,9 +53,16 @@ function SpriteGallery({ visible, onClose }: { visible: boolean; onClose: () => 
                 <View key={id} style={galleryStyles.cell}>
                   <View style={galleryStyles.spriteFrame}>
                     <Sprite x={CELL_SIZE / 2} y={CELL_SIZE / 2} />
+                    <Text
+                      style={[galleryStyles.hpLabel, { fontFamily: 'PressStart2P_400Regular' }]}
+                    >
+                      {def.health}hp
+                    </Text>
                   </View>
-                  <Text style={[galleryStyles.label, { fontFamily: 'PressStart2P_400Regular' }]}>
-                    {def.displayName} ({def.health}hp)
+                  <Text
+                    style={[galleryStyles.displayName, { fontFamily: 'PressStart2P_400Regular' }]}
+                  >
+                    {def.displayName}
                   </Text>
                 </View>
               );
@@ -128,12 +135,23 @@ const galleryStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     overflow: 'hidden',
+    position: 'relative',
   },
-  label: {
+  hpLabel: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    fontSize: 8,
+    color: '#888',
+    letterSpacing: 0,
+  },
+  displayName: {
     marginTop: 8,
     fontSize: 10,
     color: '#aaa',
     letterSpacing: 1,
+    textAlign: 'center',
+    width: '100%',
   },
 });
 
