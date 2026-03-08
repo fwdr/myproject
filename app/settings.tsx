@@ -55,7 +55,7 @@ function SpriteGallery({ visible, onClose }: { visible: boolean; onClose: () => 
                     <Sprite x={CELL_SIZE / 2} y={CELL_SIZE / 2} />
                   </View>
                   <Text style={[galleryStyles.label, { fontFamily: 'PressStart2P_400Regular' }]}>
-                    {id} ({def.health} HP)
+                    {def.displayName} ({def.health}hp)
                   </Text>
                 </View>
               );

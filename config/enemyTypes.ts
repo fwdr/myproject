@@ -24,6 +24,7 @@ export type EnemyTypeId =
 
 export type EnemyTypeDef = {
   id: EnemyTypeId;
+  displayName: string;
   health: number;
   points: number;
   radius: number;
@@ -33,6 +34,7 @@ export type EnemyTypeDef = {
 export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   type1: {
     id: 'type1',
+    displayName: 'Clive',
     health: 3,
     points: 10,
     radius: 12,
@@ -40,6 +42,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type2: {
     id: 'type2',
+    displayName: 'Cecil',
     health: 5,
     points: 15,
     radius: 12,
@@ -47,6 +50,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type3: {
     id: 'type3',
+    displayName: 'Horace',
     health: 5,
     points: 20,
     radius: 12,
@@ -54,6 +58,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type4: {
     id: 'type4',
+    displayName: 'Bertram',
     health: 1,
     points: 5,
     radius: 10,
@@ -61,6 +66,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type5: {
     id: 'type5',
+    displayName: 'Wilfred',
     health: 4,
     points: 25,
     radius: 12,
@@ -68,6 +74,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type6: {
     id: 'type6',
+    displayName: 'Cyril',
     health: 6,
     points: 30,
     radius: 12,
@@ -75,6 +82,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type7: {
     id: 'type7',
+    displayName: 'Oswald',
     health: 5,
     points: 28,
     radius: 12,
@@ -82,6 +90,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type8: {
     id: 'type8',
+    displayName: 'Percival',
     health: 4,
     points: 22,
     radius: 12,
@@ -89,6 +98,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type9: {
     id: 'type9',
+    displayName: 'Humphrey',
     health: 8,
     points: 50,
     radius: 12,
@@ -96,6 +106,7 @@ export const ENEMY_TYPES: Record<EnemyTypeId, EnemyTypeDef> = {
   },
   type10: {
     id: 'type10',
+    displayName: 'Barnaby',
     health: 3,
     points: 35,
     radius: 12,
