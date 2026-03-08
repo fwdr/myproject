@@ -445,13 +445,13 @@ export function useGameLoop(
       const rotation = (Math.atan2(dx, -dy) * 180) / Math.PI;
       const invD = 1 / distance;
       const minDim = Math.min(innerWidth, innerHeight);
-      const gunSpeed = GUN_SPEED * Math.min(1, minDim / 450);
+      const gunSpeed = gunSpeedBase * Math.min(1, minDim / 450);
       const vx = gunSpeed * dx * invD;
       const vy = gunSpeed * dy * invD;
       gunRef.current = { ...g, rotation, vx, vy };
       setGun({ ...g, rotation, vx, vy });
-      const mdx = dx * invD * MISSILE_SPEED;
-      const mdy = dy * invD * MISSILE_SPEED;
+      const mdx = dx * invD * missileSpeed;
+      const mdy = dy * invD * missileSpeed;
       const dualMode = Date.now() < dualMissileUntilRef.current;
       const bigMode = Date.now() < bigMissileUntilRef.current;
       const baseMissile = (ox: number, oy: number): Missile =>
