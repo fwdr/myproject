@@ -11,6 +11,7 @@ export default function RootLayout() {
           headerShown: false,
           contentStyle: { backgroundColor: '#1a1a2e' },
           animation: 'slide_from_right',
+          freezeOnBlur: false,
         }}
       >
         <Stack.Screen name="index" />
