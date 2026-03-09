@@ -9,8 +9,8 @@ import { ENEMY_TYPES } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
 
 const ORBIT_SIZE = 320;
-const ORBIT_RADIUS_MIN = 138;
-const ORBIT_RADIUS_MAX = 153;
+const ORBIT_RADIUS_MIN = 150;
+const ORBIT_RADIUS_MAX = 160;
 const ENEMY_COUNT = 8;
 const ORBIT_SPEED = 0.4;
 const PULSE_SPEED = 2;
