@@ -20,7 +20,6 @@ export default function HomeScreen() {
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
   const [angle, setAngle] = useState(0);
   const [radius, setRadius] = useState(ORBIT_RADIUS_MIN);
-  const [parallaxOffset, setParallaxOffset] = useState({ l1: { x: 0, y: 0 }, l2: { x: 0, y: 0 }, l3: { x: 0, y: 0 } });
   const rafRef = useRef<number | null>(null);
   const lastRef = useRef<number>(0);
   const totalTimeRef = useRef<number>(0);
@@ -30,16 +29,10 @@ export default function HomeScreen() {
       const dt = (now - lastRef.current) / 1000;
       lastRef.current = now;
       totalTimeRef.current += dt;
-      const t = totalTimeRef.current;
       setAngle((a) => (a + ORBIT_SPEED * dt) % (Math.PI * 2));
-      const pulse = 0.5 + 0.5 * Math.sin(t * PULSE_SPEED);
+      const pulse = 0.5 + 0.5 * Math.sin(totalTimeRef.current * PULSE_SPEED);
       const r = ORBIT_RADIUS_MIN + pulse * (ORBIT_RADIUS_MAX - ORBIT_RADIUS_MIN);
       setRadius(r);
-      setParallaxOffset({
-        l1: { x: 25 * Math.sin(t * 0.25), y: 18 * Math.cos(t * 0.2) },
-        l2: { x: 45 * Math.sin(t * 0.4), y: 35 * Math.cos(t * 0.35) },
-        l3: { x: 65 * Math.sin(t * 0.55), y: 50 * Math.cos(t * 0.5) },
-      });
       rafRef.current = requestAnimationFrame(tick);
     };
     lastRef.current = performance.now();
@@ -72,23 +65,6 @@ export default function HomeScreen() {
       }
       contentStyle={styles.content}
     >
-      <View style={styles.parallaxWrapper}>
-        <View style={[styles.parallaxLayer, styles.parallaxLayer1, { transform: [{ translateX: parallaxOffset.l1.x }, { translateY: parallaxOffset.l1.y }] }]}>
-          {[0, 1, 2].map((i) => (
-            <View key={i} style={[styles.parallaxDot, styles.parallaxDotLarge, { left: 20 + i * 45 + (i % 2) * 80, top: 60 + i * 70 }]} />
-          ))}
-        </View>
-        <View style={[styles.parallaxLayer, styles.parallaxLayer2, { transform: [{ translateX: parallaxOffset.l2.x }, { translateY: parallaxOffset.l2.y }] }]}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <View key={i} style={[styles.parallaxDot, styles.parallaxDotMed, { left: 50 + (i * 67) % 200, top: 40 + (i * 89) % 250 }]} />
-          ))}
-        </View>
-        <View style={[styles.parallaxLayer, styles.parallaxLayer3, { transform: [{ translateX: parallaxOffset.l3.x }, { translateY: parallaxOffset.l3.y }] }]}>
-          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} style={[styles.parallaxDot, styles.parallaxDotSmall, { left: 30 + (i * 53) % 220, top: 80 + (i * 71) % 200 }]} />
-          ))}
-        </View>
-      </View>
       <View style={styles.orbitContainer}>
         <View style={styles.orbitArea}>
           {enemyIds.slice(0, ENEMY_COUNT).map((typeId, i) => {
@@ -138,36 +114,6 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  parallaxWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-  },
-  parallaxLayer: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  parallaxLayer1: { zIndex: 0 },
-  parallaxLayer2: { zIndex: 1 },
-  parallaxLayer3: { zIndex: 2 },
-  parallaxDot: {
-    position: 'absolute',
-    borderRadius: 999,
-  },
-  parallaxDotLarge: {
-    width: 80,
-    height: 80,
-    backgroundColor: 'rgba(0, 255, 255, 0.04)',
-  },
-  parallaxDotMed: {
-    width: 50,
-    height: 50,
-    backgroundColor: 'rgba(255, 255, 0, 0.05)',
-  },
-  parallaxDotSmall: {
-    width: 24,
-    height: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
   orbitContainer: {
     flex: 1,
