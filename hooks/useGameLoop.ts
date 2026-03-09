@@ -444,9 +444,10 @@ export function useGameLoop(
     return () => cancelAnimationFrame(rafId);
   }, [gameActive, levelComplete, fontsLoaded, hitTest, tunnelType, hasObstacles, powerupConfig, onGameOver]);
 
-  const [gameAreaLayout, setGameAreaLayout] = useState({ x: 0, y: 0 });
   const gameAreaLayoutRef = useRef({ x: 0, y: 0 });
-  gameAreaLayoutRef.current = { x: gameAreaLayout.x, y: gameAreaLayout.y };
+  const setGameAreaLayout = useCallback((layout: { x: number; y: number }) => {
+    gameAreaLayoutRef.current = layout;
+  }, []);
 
   const handleTap = useCallback(
     (e: NativeSyntheticEvent<NativeTouchEvent>) => {
@@ -559,7 +560,6 @@ export function useGameLoop(
     dimensionsRef,
     hitTest,
     handleTap,
-    gameAreaLayout,
     setGameAreaLayout,
   };
 }
