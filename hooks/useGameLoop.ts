@@ -355,16 +355,20 @@ export function useGameLoop(
           }
         }
 
-        let hitEnemy = false;
+        let blockedByObstacle = false;
         if (hasObstacles) {
           for (const o of obstaclesRef.current) {
             if (hitTest(x, y, GUN_RADIUS, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
-              hitEnemy = true;
+              blockedByObstacle = true;
               break;
             }
           }
         }
-        if (!hitEnemy && powerupConfig) {
+        const gunPosX = blockedByObstacle ? g.x : x;
+        const gunPosY = blockedByObstacle ? g.y : y;
+
+        let hitEnemy = false;
+        if (!blockedByObstacle && powerupConfig) {
           for (const p of powerupsRef.current) {
             if (hitTest(x, y, GUN_RADIUS, p.x, p.y, POWERUP_RADIUS)) {
               setPowerups((prev) => prev.filter((pu) => pu.id !== p.id));
@@ -383,28 +387,29 @@ export function useGameLoop(
             }
           }
         }
-        if (!hitEnemy) {
-          for (const e of enemiesRef.current) {
-            if (e.health <= 0) continue;
-            const r = getEnemyType(e.typeId).radius;
-            if (hitTest(x, y, GUN_RADIUS, e.x, e.y, r)) {
-              hitEnemy = true;
-              const newLives = Math.max(0, livesRef.current - 1);
-              livesRef.current = newLives;
-              setLives(newLives);
-              if (newLives <= 0) onGameOver();
-              setGun(null);
-              gunRef.current = null;
-              if (newLives > 0) {
-                gunRespawnAtRef.current = Date.now() + 500;
-              }
-              break;
+        for (const e of enemiesRef.current) {
+          if (e.health <= 0) continue;
+          const r = getEnemyType(e.typeId).radius;
+          if (hitTest(gunPosX, gunPosY, GUN_RADIUS, e.x, e.y, r)) {
+            hitEnemy = true;
+            const newLives = Math.max(0, livesRef.current - 1);
+            livesRef.current = newLives;
+            setLives(newLives);
+            if (newLives <= 0) onGameOver();
+            setGun(null);
+            gunRef.current = null;
+            if (newLives > 0) {
+              gunRespawnAtRef.current = Date.now() + 500;
             }
+            break;
           }
         }
-        if (!hitEnemy) {
+        if (!hitEnemy && !blockedByObstacle) {
           gunRef.current = { ...g, x, y, vx: nextVx, vy };
           setGun({ ...g, x, y, vx: nextVx, vy });
+        } else if (!hitEnemy && blockedByObstacle) {
+          gunRef.current = { ...g, vx: 0, vy: 0 };
+          setGun({ ...g, vx: 0, vy: 0 });
         }
       }
 
