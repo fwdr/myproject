@@ -13,7 +13,7 @@ function getPlaybackRate(levelNumber: number): number {
   return 1.15;
 }
 
-export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
+export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number, gameActive = true) {
   const soundRef = useRef<Audio.Sound | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
   soundEnabledRef.current = soundEnabled;
@@ -111,10 +111,10 @@ export function useBackgroundMusic(soundEnabled: boolean, levelNumber: number) {
   useEffect(() => {
     const s = soundRef.current;
     if (!s) return;
-    if (soundEnabled) {
+    if (soundEnabled && gameActive) {
       s.playAsync().catch(() => {});
     } else {
       s.pauseAsync().catch(() => {});
     }
-  }, [soundEnabled]);
+  }, [soundEnabled, gameActive]);
 }
