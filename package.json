@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "version:gen": "node scripts/gen-version.js",
+    "generate:sounds": "node scripts/generate-missile-sound.js",
     "prestart": "npm run version:gen",
     "prebuild": "npm run version:gen",
     "start": "expo start",

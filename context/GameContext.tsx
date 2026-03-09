@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEYS = {
   SOUND_ENABLED: '@game/soundEnabled',
+  SOUND_EFFECTS_ENABLED: '@game/soundEffectsEnabled',
   HIGH_SCORE: '@game/highScore',
   UNLOCKED_LEVEL: '@game/unlockedLevel',
   START_LEVEL: '@game/startLevel',
@@ -14,6 +15,8 @@ const MAX_LEVEL = 20;
 type GameContextValue = {
   soundEnabled: boolean;
   setSoundEnabled: (value: boolean) => void;
+  soundEffectsEnabled: boolean;
+  setSoundEffectsEnabled: (value: boolean) => void;
   highScore: number;
   setHighScore: (value: number | ((prev: number) => number)) => void;
   resetHighScore: () => void;
@@ -30,6 +33,7 @@ const GameContext = createContext<GameContextValue | null>(null);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [soundEnabled, setSoundEnabledState] = useState(true);
+  const [soundEffectsEnabled, setSoundEffectsEnabledState] = useState(true);
   const [highScore, setHighScoreState] = useState(0);
   const [unlockedLevel, setUnlockedLevelState] = useState(1);
   const [startLevel, setStartLevelState] = useState(1);
@@ -39,14 +43,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        const [sound, score, unlocked, start, testModeStored] = await Promise.all([
+        const [sound, soundFx, score, unlocked, start, testModeStored] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEYS.SOUND_ENABLED),
+          AsyncStorage.getItem(STORAGE_KEYS.SOUND_EFFECTS_ENABLED),
           AsyncStorage.getItem(STORAGE_KEYS.HIGH_SCORE),
           AsyncStorage.getItem(STORAGE_KEYS.UNLOCKED_LEVEL),
           AsyncStorage.getItem(STORAGE_KEYS.START_LEVEL),
           AsyncStorage.getItem(STORAGE_KEYS.TEST_MODE),
         ]);
         if (sound !== null) setSoundEnabledState(sound === 'true');
+        if (soundFx !== null) setSoundEffectsEnabledState(soundFx === 'true');
         if (score !== null) setHighScoreState(parseInt(score, 10) || 0);
         const u = unlocked !== null ? Math.min(MAX_LEVEL, Math.max(1, parseInt(unlocked, 10) || 1)) : 1;
         const st = start !== null ? Math.min(MAX_LEVEL, Math.max(1, parseInt(start, 10) || 1)) : 1;
@@ -62,6 +68,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const setSoundEnabled = useCallback(async (value: boolean) => {
     setSoundEnabledState(value);
     await AsyncStorage.setItem(STORAGE_KEYS.SOUND_ENABLED, String(value));
+  }, []);
+
+  const setSoundEffectsEnabled = useCallback(async (value: boolean) => {
+    setSoundEffectsEnabledState(value);
+    await AsyncStorage.setItem(STORAGE_KEYS.SOUND_EFFECTS_ENABLED, String(value));
   }, []);
 
   const setHighScore = useCallback(
@@ -106,6 +117,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       value={{
         soundEnabled,
         setSoundEnabled,
+        soundEffectsEnabled,
+        setSoundEffectsEnabled,
         highScore,
         setHighScore,
         resetHighScore,

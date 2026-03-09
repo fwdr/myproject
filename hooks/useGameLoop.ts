@@ -24,6 +24,7 @@ import { getEnemyType } from '../config/enemyTypes';
 type GameLoopCallbacks = {
   onLevelComplete: () => void;
   onGameOver: () => void;
+  onMissileFired?: () => void;
 };
 
 export function useGameLoop(
@@ -36,7 +37,9 @@ export function useGameLoop(
   fontsLoaded: boolean,
   callbacks: GameLoopCallbacks
 ) {
-  const { onLevelComplete, onGameOver } = callbacks;
+  const { onLevelComplete, onGameOver, onMissileFired } = callbacks;
+  const onMissileFiredRef = useRef(onMissileFired);
+  onMissileFiredRef.current = onMissileFired;
   const [gun, setGun] = useState<Gun | null>(null);
   const [missiles, setMissiles] = useState<Missile[]>([]);
   const [enemies, setEnemies] = useState<Enemy[]>([]);
@@ -502,6 +505,7 @@ export function useGameLoop(
           missilesRef.current = next;
           return next;
         });
+        onMissileFiredRef.current?.();
       } else {
         const m = baseMissile(0, 0);
         setMissiles((prev) => {
@@ -509,6 +513,7 @@ export function useGameLoop(
           missilesRef.current = next;
           return next;
         });
+        onMissileFiredRef.current?.();
       }
     },
     [powerupConfig, innerWidth, innerHeight]

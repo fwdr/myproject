@@ -160,6 +160,8 @@ export default function SettingsScreen() {
   const {
     soundEnabled,
     setSoundEnabled,
+    soundEffectsEnabled,
+    setSoundEffectsEnabled,
     resetHighScore,
     unlockedLevel,
     startLevel,
@@ -259,6 +261,16 @@ export default function SettingsScreen() {
         <Switch
           value={soundEnabled}
           onValueChange={setSoundEnabled}
+          trackColor={{ false: '#444', true: '#4ade80' }}
+          thumbColor="#fff"
+        />
+      </View>
+
+      <View style={[styles.row, { marginTop: 12 }]}>
+        <Text style={[styles.label, { fontFamily: 'PressStart2P_400Regular' }]}>Sound effects</Text>
+        <Switch
+          value={soundEffectsEnabled}
+          onValueChange={setSoundEffectsEnabled}
           trackColor={{ false: '#444', true: '#4ade80' }}
           thumbColor="#fff"
         />

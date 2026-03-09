@@ -15,6 +15,7 @@ import { ScreenLayout, MENU_BAR_HEIGHT } from './ScreenLayout';
 import { BrickWall } from './BrickWall';
 import { getBrickStyleForLevel } from '../config/brickStyles';
 import { AmbientParticles, getParticleStyleForLevel } from './AmbientParticles';
+import { useMissileSound } from '../hooks/useMissileSound';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { getEnemyType } from '../config/enemyTypes';
 import { EnemyWithEffects } from './EnemyWithEffects';
@@ -58,8 +59,9 @@ export function GameScreen({
 }: GameScreenProps) {
   const brickStyle = brickStyleProp ?? getBrickStyleForLevel(levelNumber);
   const router = useRouter();
-  const { setHighScore, recordLevelComplete, soundEnabled } = useGame();
+  const { setHighScore, recordLevelComplete, soundEnabled, soundEffectsEnabled } = useGame();
   useBackgroundMusic(soundEnabled, levelNumber);
+  const playMissileSound = useMissileSound(soundEffectsEnabled);
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', (e) => setDimensions(e.window));
@@ -87,6 +89,7 @@ export function GameScreen({
     {
       onLevelComplete: () => setLevelComplete(true),
       onGameOver: () => setGameActive(false),
+      onMissileFired: playMissileSound,
     }
   );
 
