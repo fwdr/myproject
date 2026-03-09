@@ -201,6 +201,34 @@ export function useGameLoop(
     }
   }, [enemies.length, currentWaveIndex, config.waves, onLevelComplete]);
 
+  const hitTest = useCallback((ax: number, ay: number, ar: number, bx: number, by: number, br: number) => {
+    const dx = ax - bx;
+    const dy = ay - by;
+    return dx * dx + dy * dy < (ar + br) * (ar + br);
+  }, []);
+
+  const findValidGunSpawn = useCallback(
+    (width: number, height: number, obstacles: { x: number; y: number }[]) => {
+      const padding = GUN_SIZE + 10;
+      const spawnClearance = 4; // extra buffer from obstacles
+      const maxAttempts = 80;
+      for (let i = 0; i < maxAttempts; i++) {
+        const x = padding + Math.random() * (width - padding * 2);
+        const y = padding + Math.random() * (height - padding * 2);
+        let valid = true;
+        for (const o of obstacles) {
+          if (hitTest(x, y, GUN_RADIUS + spawnClearance, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
+            valid = false;
+            break;
+          }
+        }
+        if (valid) return { x, y };
+      }
+      return { x: width / 2, y: height / 2 };
+    },
+    [hitTest]
+  );
+
   // Gun init
   useEffect(() => {
     const w = innerWidth;
@@ -231,34 +259,6 @@ export function useGameLoop(
     }, powerupConfig.spawnIntervalMs);
     return () => clearInterval(interval);
   }, [gameActive, levelComplete, powerupConfig, innerWidth, innerHeight]);
-
-  const hitTest = useCallback((ax: number, ay: number, ar: number, bx: number, by: number, br: number) => {
-    const dx = ax - bx;
-    const dy = ay - by;
-    return dx * dx + dy * dy < (ar + br) * (ar + br);
-  }, []);
-
-  const findValidGunSpawn = useCallback(
-    (width: number, height: number, obstacles: { x: number; y: number }[]) => {
-      const padding = GUN_SIZE + 10;
-      const spawnClearance = 4; // extra buffer from obstacles
-      const maxAttempts = 80;
-      for (let i = 0; i < maxAttempts; i++) {
-        const x = padding + Math.random() * (width - padding * 2);
-        const y = padding + Math.random() * (height - padding * 2);
-        let valid = true;
-        for (const o of obstacles) {
-          if (hitTest(x, y, GUN_RADIUS + spawnClearance, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
-            valid = false;
-            break;
-          }
-        }
-        if (valid) return { x, y };
-      }
-      return { x: width / 2, y: height / 2 };
-    },
-    [hitTest]
-  );
 
   // Game tick
   const tunnelType = config.tunnel ?? 'none';

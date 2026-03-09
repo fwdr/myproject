@@ -130,8 +130,9 @@ export default function HomeScreen() {
         </View>
       </View>
       <View
-        onMouseEnter={Platform.OS === 'web' ? () => setButtonHovered(true) : undefined}
-        onMouseLeave={Platform.OS === 'web' ? () => setButtonHovered(false) : undefined}
+        {...(Platform.OS === 'web'
+          ? ({ onMouseEnter: () => setButtonHovered(true), onMouseLeave: () => setButtonHovered(false) } as any)
+          : {})}
       >
         <Pressable
           style={({ pressed }) => [
