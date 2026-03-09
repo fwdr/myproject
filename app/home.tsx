@@ -88,17 +88,25 @@ export default function HomeScreen() {
               </View>
             );
           })}
-          <TouchableOpacity
-            style={styles.startButton}
-            onPress={() => router.push(`/level${startLevel}`)}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.startButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-              START
+          <View style={styles.logoContainer}>
+            <Text style={[styles.logoText, { fontFamily: 'PressStart2P_400Regular' }]}>
+              PIXEL
             </Text>
-          </TouchableOpacity>
+            <Text style={[styles.logoText, styles.logoTextAccent, { fontFamily: 'PressStart2P_400Regular' }]}>
+              DOGFIGHT
+            </Text>
+          </View>
         </View>
       </View>
+      <TouchableOpacity
+        style={styles.startButton}
+        onPress={() => router.push(`/level${startLevel}`)}
+        activeOpacity={0.8}
+      >
+        <Text style={[styles.startButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
+          START
+        </Text>
+      </TouchableOpacity>
     </ScreenLayout>
   );
 }
@@ -107,8 +115,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingTop: 24,
+    paddingBottom: 24,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   orbitContainer: {
     flex: 1,
@@ -126,9 +135,21 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
+  logoContainer: {
+    alignItems: 'center',
+  },
+  logoText: {
+    fontSize: 22,
+    color: '#00FFFF',
+    letterSpacing: 4,
+  },
+  logoTextAccent: {
+    color: '#FFFF00',
+    letterSpacing: 3,
+  },
   startButton: {
-    width: 140,
-    paddingVertical: 16,
+    width: 160,
+    paddingVertical: 14,
     paddingHorizontal: 28,
     backgroundColor: '#4ade80',
     borderWidth: 3,
