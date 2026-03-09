@@ -13,7 +13,7 @@ export type WaveSpawn = {
 export type StaticObstacle = { x: number; y: number }; // fractional 0-1
 export type TunnelType = 'none' | 'horizontal' | 'vertical';
 
-export type PowerupTypeId = 'dual' | 'big';
+export type PowerupTypeId = 'dual' | 'big' | 'spread';
 
 export type PowerupConfig = {
   type: PowerupTypeId;
