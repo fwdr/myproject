@@ -96,7 +96,7 @@ export function BrickWall({
   };
 
   return (
-    <>
+    <View style={styles.wallContainer} pointerEvents="none">
       <View style={[styles.brickStrip, styles.brickTop, { width }, hasTopBottomGaps && styles.brickStripCentered]}>
         {renderTopBottomStrip('t')}
       </View>
@@ -109,11 +109,15 @@ export function BrickWall({
       <View style={[styles.brickStripCol, styles.brickRight]}>
         {renderSideColumn('r')}
       </View>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wallContainer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
+  },
   brick: {
     width: BRICK_W - MORTAR,
     height: BRICK_H - MORTAR,
