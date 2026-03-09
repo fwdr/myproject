@@ -133,6 +133,10 @@ export function getParticleStyleForLevel(levelNumber: number): ParticleStyleId {
   return STYLE_ORDER[(levelNumber - 1) % STYLE_ORDER.length];
 }
 
+export function getRandomParticleStyle(): ParticleStyleId {
+  return STYLE_ORDER[Math.floor(Math.random() * STYLE_ORDER.length)];
+}
+
 type Particle = {
   id: number;
   x: number;

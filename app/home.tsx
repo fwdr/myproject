@@ -1,8 +1,9 @@
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { ScreenLayout } from '../components/ScreenLayout';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
+import { AmbientParticles, getRandomParticleStyle } from '../components/AmbientParticles';
 import { useGame } from '../context/GameContext';
 import { ENEMY_TYPES } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
@@ -20,7 +21,17 @@ export default function HomeScreen() {
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
   const [angle, setAngle] = useState(0);
   const [radius, setRadius] = useState(ORBIT_RADIUS_MIN);
+  const particleStyle = useMemo(() => getRandomParticleStyle(), []);
+  const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', (e) => setDimensions(e.window));
+    return () => sub?.remove();
+  }, []);
+
+  const contentWidth = dimensions.width - 48;
+  const contentHeight = dimensions.height - MENU_BAR_HEIGHT - 48;
   const lastRef = useRef<number>(0);
   const totalTimeRef = useRef<number>(0);
 
@@ -52,9 +63,14 @@ export default function HomeScreen() {
       menuCenter={<View />}
       menuRight={
         <>
-          <Text style={[styles.menuScore, { fontFamily: 'PressStart2P_400Regular' }]}>
-            {String(highScore).padStart(5, '0')}
-          </Text>
+          <View style={styles.menuScoreBlock}>
+            <Text style={[styles.menuScoreLabel, { fontFamily: 'PressStart2P_400Regular' }]}>
+              HIGH SCORE
+            </Text>
+            <Text style={[styles.menuScore, { fontFamily: 'PressStart2P_400Regular' }]}>
+              {String(highScore).padStart(5, '0')}
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() => router.push('/settings')}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -65,9 +81,23 @@ export default function HomeScreen() {
       }
       contentStyle={styles.content}
     >
-      <View style={styles.orbitContainer}>
-        <View style={styles.orbitArea}>
-          {enemyIds.slice(0, ENEMY_COUNT).map((typeId, i) => {
+      <View style={styles.contentWrapper}>
+        <AmbientParticles styleId={particleStyle} width={contentWidth} height={contentHeight} />
+        <View style={styles.orbitContainer}>
+          <View style={styles.orbitArea}>
+            <View
+              style={[
+                styles.orbitalRing,
+                {
+                  width: radius * 2,
+                  height: radius * 2,
+                  borderRadius: radius,
+                  left: center - radius,
+                  top: center - radius,
+                },
+              ]}
+            />
+            {enemyIds.slice(0, ENEMY_COUNT).map((typeId, i) => {
             const offset = (Math.PI * 2 * i) / ENEMY_COUNT;
             const a = angle + offset;
             const x = center + radius * Math.cos(a);
@@ -92,6 +122,7 @@ export default function HomeScreen() {
               DOGFIGHT
             </Text>
           </View>
+          </View>
         </View>
       </View>
       <TouchableOpacity
@@ -114,6 +145,17 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  contentWrapper: {
+    flex: 1,
+    position: 'relative',
+    alignSelf: 'stretch',
+  },
+  orbitalRing: {
+    position: 'absolute',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 255, 255, 0.25)',
+    backgroundColor: 'transparent',
   },
   orbitContainer: {
     flex: 1,
@@ -168,6 +210,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#00FFFF',
     letterSpacing: 1,
+  },
+  menuScoreBlock: {
+    alignItems: 'flex-end',
+  },
+  menuScoreLabel: {
+    fontSize: 10,
+    color: '#00FFFF',
+    letterSpacing: 1,
+    marginBottom: 2,
   },
   menuScore: {
     fontSize: 12,
