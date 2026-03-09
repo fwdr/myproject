@@ -49,11 +49,7 @@ export default function HomeScreen() {
 
   return (
     <ScreenLayout
-      menuCenter={
-        <Text style={[styles.menuTitle, { fontFamily: 'PressStart2P_400Regular' }]}>
-          HOME
-        </Text>
-      }
+      menuCenter={<View />}
       menuRight={
         <>
           <Text style={[styles.menuScore, { fontFamily: 'PressStart2P_400Regular' }]}>
