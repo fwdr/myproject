@@ -46,6 +46,7 @@ export function useGameLoop(
   const [powerups, setPowerups] = useState<Powerup[]>([]);
   const [dualMissileUntil, setDualMissileUntil] = useState(0);
   const [bigMissileUntil, setBigMissileUntil] = useState(0);
+  const [spreadMissileUntil, setSpreadMissileUntil] = useState(0);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(0);
   const [score, setScore] = useState(initialScore);
   const [lives, setLives] = useState(INITIAL_LIVES);
@@ -56,6 +57,7 @@ export function useGameLoop(
   const powerupsRef = useRef<Powerup[]>([]);
   const dualMissileUntilRef = useRef(0);
   const bigMissileUntilRef = useRef(0);
+  const spreadMissileUntilRef = useRef(0);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   const livesRef = useRef(INITIAL_LIVES);
   const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
@@ -106,6 +108,10 @@ export function useGameLoop(
   useEffect(() => {
     bigMissileUntilRef.current = bigMissileUntil;
   }, [bigMissileUntil]);
+
+  useEffect(() => {
+    spreadMissileUntilRef.current = spreadMissileUntil;
+  }, [spreadMissileUntil]);
 
   useEffect(() => {
     livesRef.current = lives;
@@ -348,9 +354,12 @@ export function useGameLoop(
               if (p.typeId === 'dual') {
                 setDualMissileUntil(until);
                 dualMissileUntilRef.current = until;
-              } else {
+              } else if (p.typeId === 'big') {
                 setBigMissileUntil(until);
                 bigMissileUntilRef.current = until;
+              } else {
+                setSpreadMissileUntil(until);
+                spreadMissileUntilRef.current = until;
               }
               break;
             }
@@ -469,6 +478,7 @@ export function useGameLoop(
       const mdy = dy * invD * missileSpeed;
       const dualMode = Date.now() < dualMissileUntilRef.current;
       const bigMode = Date.now() < bigMissileUntilRef.current;
+      const spreadMode = Date.now() < spreadMissileUntilRef.current;
       const baseMissile = (ox: number, oy: number): Missile => {
         const sx = g.x + ox;
         const sy = g.y + oy;
@@ -495,7 +505,22 @@ export function useGameLoop(
               spawnY: sy,
             };
       };
-      if (dualMode) {
+      const R45 = Math.SQRT1_2; // cos(45°) = sin(45°) = √2/2
+      if (spreadMode) {
+        const m1dx = (mdx - mdy) * R45;
+        const m1dy = (mdx + mdy) * R45;
+        const m3dx = (mdx + mdy) * R45;
+        const m3dy = (-mdx + mdy) * R45;
+        const m1 = { ...baseMissile(0, 0), dx: m1dx, dy: m1dy };
+        const m2 = baseMissile(0, 0);
+        const m3 = { ...baseMissile(0, 0), dx: m3dx, dy: m3dy };
+        setMissiles((prev) => {
+          const next = [...prev, m1, m2, m3];
+          missilesRef.current = next;
+          return next;
+        });
+        onMissileFiredRef.current?.();
+      } else if (dualMode) {
         const perpX = -dy * invD * DUAL_MISSILE_OFFSET;
         const perpY = dx * invD * DUAL_MISSILE_OFFSET;
         const m1 = baseMissile(-perpX, -perpY);

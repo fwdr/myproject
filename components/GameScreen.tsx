@@ -23,6 +23,7 @@ import { ObstacleSprite } from './ObstacleSprite';
 import { LevelIntro } from './LevelIntro';
 import { PowerupSprite } from './sprites/PowerupSprite';
 import { Powerup2Sprite } from './sprites/Powerup2Sprite';
+import { Powerup3Sprite } from './sprites/Powerup3Sprite';
 import { GunSprite } from './sprites/GunSprite';
 import {
   GUN_SIZE,
@@ -248,6 +249,8 @@ export function GameScreen({
           {powerups.map((p) =>
             p.typeId === 'big' ? (
               <Powerup2Sprite key={p.id} x={p.x} y={p.y} />
+            ) : p.typeId === 'spread' ? (
+              <Powerup3Sprite key={p.id} x={p.x} y={p.y} />
             ) : (
               <PowerupSprite key={p.id} x={p.x} y={p.y} />
             )

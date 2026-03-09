@@ -4,7 +4,7 @@ export const LEVEL_10: LevelConfig = {
   id: 'level10',
   tunnel: 'vertical',
   powerups: {
-    type: 'big',
+    type: 'spread',
     spawnChance: 0.03,
     spawnIntervalMs: 2000,
     durationMs: 12000,
