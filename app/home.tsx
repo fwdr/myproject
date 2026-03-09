@@ -1,7 +1,7 @@
 import { useFonts, PressStart2P_400Regular } from '@expo-google-fonts/press-start-2p';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable, StyleSheet, Dimensions, Platform } from 'react-native';
 import { ScreenLayout, MENU_BAR_HEIGHT } from '../components/ScreenLayout';
 import { AmbientParticles, getRandomParticleStyle } from '../components/AmbientParticles';
 import { useGame } from '../context/GameContext';
@@ -21,6 +21,8 @@ export default function HomeScreen() {
   const [fontsLoaded] = useFonts({ PressStart2P_400Regular });
   const [angle, setAngle] = useState(0);
   const [radius, setRadius] = useState(ORBIT_RADIUS_MIN);
+  const [buttonGlow, setButtonGlow] = useState(0.7);
+  const [buttonHovered, setButtonHovered] = useState(false);
   const particleStyle = useMemo(() => getRandomParticleStyle(), []);
   const [dimensions, setDimensions] = useState(() => Dimensions.get('window'));
   const rafRef = useRef<number | null>(null);
@@ -44,6 +46,8 @@ export default function HomeScreen() {
       const pulse = 0.5 + 0.5 * Math.sin(totalTimeRef.current * PULSE_SPEED);
       const r = ORBIT_RADIUS_MIN + pulse * (ORBIT_RADIUS_MAX - ORBIT_RADIUS_MIN);
       setRadius(r);
+      const glow = 0.6 + 0.4 * Math.sin(totalTimeRef.current * 1.5);
+      setButtonGlow(glow);
       rafRef.current = requestAnimationFrame(tick);
     };
     lastRef.current = performance.now();
@@ -125,15 +129,29 @@ export default function HomeScreen() {
           </View>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.startButton}
-        onPress={() => router.push(`/level${startLevel}`)}
-        activeOpacity={0.8}
+      <View
+        onMouseEnter={Platform.OS === 'web' ? () => setButtonHovered(true) : undefined}
+        onMouseLeave={Platform.OS === 'web' ? () => setButtonHovered(false) : undefined}
       >
-        <Text style={[styles.startButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
-          START
-        </Text>
-      </TouchableOpacity>
+        <Pressable
+          style={({ pressed }) => [
+            styles.startButton,
+            {
+              transform: [{ scale: pressed ? 0.96 : 1 }],
+              shadowColor: '#4ade80',
+              shadowOffset: { width: 0, height: 4 },
+              shadowRadius: 8 * buttonGlow + (buttonHovered && !pressed ? 6 : 0),
+              shadowOpacity: 0.4 * buttonGlow * (buttonHovered && !pressed ? 1.3 : 1),
+              elevation: 6 + (buttonHovered && !pressed ? 2 : 0),
+            },
+          ]}
+          onPress={() => router.push(`/level${startLevel}`)}
+        >
+          <Text style={[styles.startButtonText, { fontFamily: 'PressStart2P_400Regular' }]}>
+            START
+          </Text>
+        </Pressable>
+      </View>
     </ScreenLayout>
   );
 }
@@ -200,6 +218,11 @@ const styles = StyleSheet.create({
     borderColor: '#22c55e',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#4ade80',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    shadowOpacity: 0.4,
+    elevation: 6,
   },
   startButtonText: {
     fontSize: 18,
