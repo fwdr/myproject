@@ -205,14 +205,12 @@ export function useGameLoop(
   useEffect(() => {
     const w = innerWidth;
     const h = innerHeight;
-    const padding = GUN_SIZE + 10;
-    const x = padding + Math.random() * (w - padding * 2);
-    const y = padding + Math.random() * (h - padding * 2);
+    const { x, y } = findValidGunSpawn(w, h, obstaclePositions);
     const g: Gun = { x, y, rotation: 0, vx: 0, vy: 0 };
     setGun(g);
     gunRef.current = g;
     gunTargetRef.current = { x, y };
-  }, [innerWidth, innerHeight]);
+  }, [innerWidth, innerHeight, findValidGunSpawn, obstaclePositions]);
 
   // Powerup spawn
   const powerupConfig = config.powerups;
@@ -240,6 +238,28 @@ export function useGameLoop(
     return dx * dx + dy * dy < (ar + br) * (ar + br);
   }, []);
 
+  const findValidGunSpawn = useCallback(
+    (width: number, height: number, obstacles: { x: number; y: number }[]) => {
+      const padding = GUN_SIZE + 10;
+      const spawnClearance = 4; // extra buffer from obstacles
+      const maxAttempts = 80;
+      for (let i = 0; i < maxAttempts; i++) {
+        const x = padding + Math.random() * (width - padding * 2);
+        const y = padding + Math.random() * (height - padding * 2);
+        let valid = true;
+        for (const o of obstacles) {
+          if (hitTest(x, y, GUN_RADIUS + spawnClearance, o.x, o.y, STATIC_OBSTACLE_RADIUS)) {
+            valid = false;
+            break;
+          }
+        }
+        if (valid) return { x, y };
+      }
+      return { x: width / 2, y: height / 2 };
+    },
+    [hitTest]
+  );
+
   // Game tick
   const tunnelType = config.tunnel ?? 'none';
   const hasObstacles = (config.staticObstacles?.length ?? 0) > 0;
@@ -255,9 +275,7 @@ export function useGameLoop(
 
       if (!g && gunRespawnAtRef.current > 0 && Date.now() >= gunRespawnAtRef.current) {
         gunRespawnAtRef.current = 0;
-        const padding = GUN_SIZE + 10;
-        const nx = padding + Math.random() * (width - padding * 2);
-        const ny = padding + Math.random() * (height - padding * 2);
+        const { x: nx, y: ny } = findValidGunSpawn(width, height, obstaclesRef.current);
         const ng: Gun = { x: nx, y: ny, rotation: 0, vx: 0, vy: 0 };
         gunRef.current = ng;
         setGun(ng);
@@ -442,7 +460,7 @@ export function useGameLoop(
     };
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
-  }, [gameActive, levelComplete, fontsLoaded, hitTest, tunnelType, hasObstacles, powerupConfig, onGameOver]);
+  }, [gameActive, levelComplete, fontsLoaded, hitTest, findValidGunSpawn, tunnelType, hasObstacles, powerupConfig, onGameOver]);
 
   const gameAreaLayoutRef = useRef({ x: 0, y: 0 });
   const setGameAreaLayout = useCallback((layout: { x: number; y: number }) => {
