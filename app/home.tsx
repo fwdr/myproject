@@ -8,8 +8,8 @@ import { ENEMY_TYPES } from '../config/enemyTypes';
 import type { EnemyTypeId } from '../config/enemyTypes';
 
 const ORBIT_SIZE = 320;
-const ORBIT_RADIUS_MIN = 125;
-const ORBIT_RADIUS_MAX = 140;
+const ORBIT_RADIUS_MIN = 138;
+const ORBIT_RADIUS_MAX = 153;
 const ENEMY_COUNT = 8;
 const ORBIT_SPEED = 0.4;
 const PULSE_SPEED = 2;
@@ -138,10 +138,16 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#00FFFF',
     letterSpacing: 4,
+    textShadowColor: 'rgba(0, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   logoTextAccent: {
     color: '#FFFF00',
     letterSpacing: 3,
+    textShadowColor: 'rgba(255, 255, 0, 0.8)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   startButton: {
     width: 160,
