@@ -28,7 +28,7 @@ type GameLoopCallbacks = {
 };
 
 const EXTRA_LIFE_SPAWN_AFTER_MS = 2000;
-const EXTRA_LIFE_DURATION_MS = 3000;
+const EXTRA_LIFE_DURATION_MS = 6000;
 
 export function useGameLoop(
   config: LevelConfig,
@@ -419,7 +419,7 @@ export function useGameLoop(
           setPowerups((prev) => prev.filter((pu) => pu.id !== p.id));
           powerupsRef.current = powerupsRef.current.filter((pu) => pu.id !== p.id);
           if (p.typeId === 'extraLife') {
-            const newLives = Math.min(INITIAL_LIVES + 2, livesRef.current + 1);
+            const newLives = Math.min(3, livesRef.current + 1);
             livesRef.current = newLives;
             setLives(newLives);
             break;
