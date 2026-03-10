@@ -23,4 +23,4 @@ export type Enemy = {
   spawnTime?: number;
   lastDamageAt?: number;
 };
-export type Powerup = { id: number; x: number; y: number; typeId: PowerupTypeId };
+export type Powerup = { id: number; x: number; y: number; typeId: PowerupTypeId; spawnTime?: number };

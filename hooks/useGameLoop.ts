@@ -27,6 +27,9 @@ type GameLoopCallbacks = {
   onMissileFired?: () => void;
 };
 
+const EXTRA_LIFE_SPAWN_AFTER_MS = 2000;
+const EXTRA_LIFE_DURATION_MS = 3000;
+
 export function useGameLoop(
   config: LevelConfig,
   innerWidth: number,
@@ -35,6 +38,7 @@ export function useGameLoop(
   gameActive: boolean,
   levelComplete: boolean,
   fontsLoaded: boolean,
+  levelNumber: number,
   callbacks: GameLoopCallbacks
 ) {
   const { onLevelComplete, onGameOver, onMissileFired } = callbacks;
@@ -260,6 +264,35 @@ export function useGameLoop(
     return () => clearInterval(interval);
   }, [gameActive, levelComplete, powerupConfig, innerWidth, innerHeight]);
 
+  // Extra-life spawn: once per level on even levels, after delay, with config chance
+  const extraLifeSpawnedRef = useRef(false);
+  useEffect(() => {
+    extraLifeSpawnedRef.current = false;
+  }, [levelNumber]);
+
+  useEffect(() => {
+    if (!gameActive || levelComplete) return;
+    const chance = config.extraLifeChance ?? 0;
+    if (chance <= 0 || levelNumber % 2 !== 0) return;
+    const w = innerWidth;
+    const h = innerHeight;
+    if (w <= 0 || h <= 0) return;
+    const margin = 40;
+    const t = setTimeout(() => {
+      if (extraLifeSpawnedRef.current) return;
+      if (Math.random() >= chance) return;
+      extraLifeSpawnedRef.current = true;
+      const now = Date.now();
+      const x = margin + Math.random() * (w - margin * 2);
+      const y = margin + Math.random() * (h - margin * 2);
+      setPowerups((prev) => [
+        ...prev,
+        { id: ++powerupIdRef.current, x, y, typeId: 'extraLife', spawnTime: now },
+      ]);
+    }, EXTRA_LIFE_SPAWN_AFTER_MS);
+    return () => clearTimeout(t);
+  }, [gameActive, levelComplete, levelNumber, config.extraLifeChance, innerWidth, innerHeight]);
+
   // Game tick
   const tunnelType = config.tunnel ?? 'none';
   const hasObstacles = (config.staticObstacles?.length ?? 0) > 0;
@@ -367,24 +400,43 @@ export function useGameLoop(
         const gunPosX = blockedByObstacle ? g.x : x;
         const gunPosY = blockedByObstacle ? g.y : y;
 
+        // Remove expired extra-life powerups (3s on screen)
+        const now = Date.now();
+        const powerupsStillValid = powerupsRef.current.filter(
+          (pu) =>
+            pu.typeId !== 'extraLife' ||
+            pu.spawnTime == null ||
+            now - pu.spawnTime <= EXTRA_LIFE_DURATION_MS
+        );
+        if (powerupsStillValid.length !== powerupsRef.current.length) {
+          powerupsRef.current = powerupsStillValid;
+          setPowerups(powerupsStillValid);
+        }
+
         let hitEnemy = false;
-        if (!blockedByObstacle && powerupConfig) {
-          for (const p of powerupsRef.current) {
-            if (hitTest(x, y, GUN_RADIUS, p.x, p.y, POWERUP_RADIUS)) {
-              setPowerups((prev) => prev.filter((pu) => pu.id !== p.id));
-              const until = Date.now() + powerupConfig.durationMs;
-              if (p.typeId === 'dual') {
-                setDualMissileUntil(until);
-                dualMissileUntilRef.current = until;
-              } else if (p.typeId === 'big') {
-                setBigMissileUntil(until);
-                bigMissileUntilRef.current = until;
-              } else {
-                setSpreadMissileUntil(until);
-                spreadMissileUntilRef.current = until;
-              }
-              break;
+        for (const p of powerupsRef.current) {
+          if (!hitTest(gunPosX, gunPosY, GUN_RADIUS, p.x, p.y, POWERUP_RADIUS)) continue;
+          setPowerups((prev) => prev.filter((pu) => pu.id !== p.id));
+          powerupsRef.current = powerupsRef.current.filter((pu) => pu.id !== p.id);
+          if (p.typeId === 'extraLife') {
+            const newLives = Math.min(INITIAL_LIVES + 2, livesRef.current + 1);
+            livesRef.current = newLives;
+            setLives(newLives);
+            break;
+          }
+          if (powerupConfig && (p.typeId === 'dual' || p.typeId === 'big' || p.typeId === 'spread')) {
+            const until = Date.now() + powerupConfig.durationMs;
+            if (p.typeId === 'dual') {
+              setDualMissileUntil(until);
+              dualMissileUntilRef.current = until;
+            } else if (p.typeId === 'big') {
+              setBigMissileUntil(until);
+              bigMissileUntilRef.current = until;
+            } else {
+              setSpreadMissileUntil(until);
+              spreadMissileUntilRef.current = until;
             }
+            break;
           }
         }
         for (const e of enemiesRef.current) {

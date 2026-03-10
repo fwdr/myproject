@@ -2,6 +2,7 @@ import type { LevelConfig } from './level1';
 
 export const LEVEL_12: LevelConfig = {
   id: 'level12',
+  extraLifeChance: 0.5,
   tunnel: 'vertical',
   spawnOrigin: 'grouped',
   waves: [

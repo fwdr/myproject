@@ -25,6 +25,7 @@ import { LevelIntro } from './LevelIntro';
 import { PowerupSprite } from './sprites/PowerupSprite';
 import { Powerup2Sprite } from './sprites/Powerup2Sprite';
 import { Powerup3Sprite } from './sprites/Powerup3Sprite';
+import { ExtraLifeSprite } from './sprites/ExtraLifeSprite';
 import { GunSprite } from './sprites/GunSprite';
 import {
   GUN_SIZE,
@@ -87,6 +88,7 @@ export function GameScreen({
     gameActive,
     levelComplete,
     fontsLoaded,
+    levelNumber,
     {
       onLevelComplete: () => setLevelComplete(true),
       onGameOver: () => setGameActive(false),
@@ -251,6 +253,8 @@ export function GameScreen({
               <Powerup2Sprite key={p.id} x={p.x} y={p.y} />
             ) : p.typeId === 'spread' ? (
               <Powerup3Sprite key={p.id} x={p.x} y={p.y} />
+            ) : p.typeId === 'extraLife' ? (
+              <ExtraLifeSprite key={p.id} x={p.x} y={p.y} />
             ) : (
               <PowerupSprite key={p.id} x={p.x} y={p.y} />
             )
