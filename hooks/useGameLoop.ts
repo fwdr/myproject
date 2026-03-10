@@ -690,6 +690,7 @@ export function useGameLoop(
     lives,
     gunTargetRef,
     dimensionsRef,
+    forceFieldUntil,
     hitTest,
     handleTap,
     setGameAreaLayout,
