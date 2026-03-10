@@ -20,6 +20,7 @@ export const POWERUP_SPAWN_INTERVAL_MS = 2000;
 export const POWERUP_DURATION_MS = 10000;
 export const WAVE_TIMEOUT_MS = 10000;
 export const DUAL_MISSILE_OFFSET = 8;
+export const FORCE_FIELD_RADIUS = 44;
 
 export const PALETTE = {
   black: '#000000',

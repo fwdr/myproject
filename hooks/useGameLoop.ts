@@ -16,6 +16,7 @@ import {
   WAVE_TIMEOUT_MS,
   BIG_MISSILE_SIZE,
   BIG_MISSILE_HIT_RADIUS,
+  FORCE_FIELD_RADIUS,
 } from '../lib/gameConstants';
 import type { Gun, Missile, Enemy, Powerup } from '../lib/gameTypes';
 import type { LevelConfig } from '../config/levels/level1';
@@ -29,6 +30,8 @@ type GameLoopCallbacks = {
 
 const EXTRA_LIFE_SPAWN_AFTER_MS = 2000;
 const EXTRA_LIFE_DURATION_MS = 6000;
+const FORCE_FIELD_SPAWN_AFTER_MS = 2000;
+const FORCE_FIELD_DURATION_MS = 10_000;
 
 export function useGameLoop(
   config: LevelConfig,
@@ -51,6 +54,7 @@ export function useGameLoop(
   const [dualMissileUntil, setDualMissileUntil] = useState(0);
   const [bigMissileUntil, setBigMissileUntil] = useState(0);
   const [spreadMissileUntil, setSpreadMissileUntil] = useState(0);
+  const [forceFieldUntil, setForceFieldUntil] = useState(0);
   const [currentWaveIndex, setCurrentWaveIndex] = useState(0);
   const [score, setScore] = useState(initialScore);
   const [lives, setLives] = useState(INITIAL_LIVES);
@@ -62,6 +66,7 @@ export function useGameLoop(
   const dualMissileUntilRef = useRef(0);
   const bigMissileUntilRef = useRef(0);
   const spreadMissileUntilRef = useRef(0);
+  const forceFieldUntilRef = useRef(0);
   const dimensionsRef = useRef({ width: innerWidth, height: innerHeight });
   const livesRef = useRef(INITIAL_LIVES);
   const gunTargetRef = useRef({ x: innerWidth / 2, y: innerHeight / 2 });
@@ -116,6 +121,10 @@ export function useGameLoop(
   useEffect(() => {
     spreadMissileUntilRef.current = spreadMissileUntil;
   }, [spreadMissileUntil]);
+
+  useEffect(() => {
+    forceFieldUntilRef.current = forceFieldUntil;
+  }, [forceFieldUntil]);
 
   useEffect(() => {
     livesRef.current = lives;
@@ -293,6 +302,33 @@ export function useGameLoop(
     return () => clearTimeout(t);
   }, [gameActive, levelComplete, levelNumber, config.extraLifeChance, innerWidth, innerHeight]);
 
+  const forceFieldSpawnedRef = useRef(false);
+  useEffect(() => {
+    forceFieldSpawnedRef.current = false;
+  }, [levelNumber]);
+
+  useEffect(() => {
+    if (!gameActive || levelComplete) return;
+    const chance = config.forceFieldChance ?? 0;
+    if (chance <= 0 || levelNumber % 2 !== 1) return;
+    const w = innerWidth;
+    const h = innerHeight;
+    if (w <= 0 || h <= 0) return;
+    const margin = 40;
+    const t = setTimeout(() => {
+      if (forceFieldSpawnedRef.current) return;
+      if (Math.random() >= chance) return;
+      forceFieldSpawnedRef.current = true;
+      const x = margin + Math.random() * (w - margin * 2);
+      const y = margin + Math.random() * (h - margin * 2);
+      setPowerups((prev) => [
+        ...prev,
+        { id: ++powerupIdRef.current, x, y, typeId: 'forceField' },
+      ]);
+    }, FORCE_FIELD_SPAWN_AFTER_MS);
+    return () => clearTimeout(t);
+  }, [gameActive, levelComplete, levelNumber, config.forceFieldChance, innerWidth, innerHeight]);
+
   // Game tick
   const tunnelType = config.tunnel ?? 'none';
   const hasObstacles = (config.staticObstacles?.length ?? 0) > 0;
@@ -330,6 +366,9 @@ export function useGameLoop(
       const target = g ? { x: g.x, y: g.y } : gunTargetRef.current;
       if (g) gunTargetRef.current = { x: g.x, y: g.y };
 
+      const forceFieldActive = g != null && Date.now() < forceFieldUntilRef.current;
+      const gunPosForField = g != null ? { x: g.x, y: g.y } : null;
+
       let enemiesNext = enemiesRef.current.map((e) => {
         if (e.health <= 0) return e;
         const dx = target.x - e.x;
@@ -342,6 +381,17 @@ export function useGameLoop(
         const pad = r + 2;
         let nx = e.x + vx;
         let ny = e.y + vy;
+        if (forceFieldActive && gunPosForField) {
+          const toEnemyX = nx - gunPosForField.x;
+          const toEnemyY = ny - gunPosForField.y;
+          const d = Math.sqrt(toEnemyX * toEnemyX + toEnemyY * toEnemyY);
+          const minDist = FORCE_FIELD_RADIUS + r;
+          if (d > 0.01 && d < minDist) {
+            const scale = minDist / d;
+            nx = gunPosForField.x + toEnemyX * scale;
+            ny = gunPosForField.y + toEnemyY * scale;
+          }
+        }
         nx = Math.max(pad, Math.min(width - pad, nx));
         ny = Math.max(pad, Math.min(height - pad, ny));
         return { ...e, x: nx, y: ny };
@@ -424,6 +474,12 @@ export function useGameLoop(
             setLives(newLives);
             break;
           }
+          if (p.typeId === 'forceField') {
+            const until = Date.now() + FORCE_FIELD_DURATION_MS;
+            setForceFieldUntil(until);
+            forceFieldUntilRef.current = until;
+            break;
+          }
           if (powerupConfig && (p.typeId === 'dual' || p.typeId === 'big' || p.typeId === 'spread')) {
             const until = Date.now() + powerupConfig.durationMs;
             if (p.typeId === 'dual') {
@@ -439,10 +495,11 @@ export function useGameLoop(
             break;
           }
         }
+        const shieldActive = Date.now() < forceFieldUntilRef.current;
         for (const e of enemiesRef.current) {
           if (e.health <= 0) continue;
           const r = getEnemyType(e.typeId).radius;
-          if (hitTest(gunPosX, gunPosY, GUN_RADIUS, e.x, e.y, r)) {
+          if (!shieldActive && hitTest(gunPosX, gunPosY, GUN_RADIUS, e.x, e.y, r)) {
             hitEnemy = true;
             const newLives = Math.max(0, livesRef.current - 1);
             livesRef.current = newLives;

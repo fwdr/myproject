@@ -13,7 +13,7 @@ export type WaveSpawn = {
 export type StaticObstacle = { x: number; y: number }; // fractional 0-1
 export type TunnelType = 'none' | 'horizontal' | 'vertical';
 
-export type PowerupTypeId = 'dual' | 'big' | 'spread' | 'extraLife';
+export type PowerupTypeId = 'dual' | 'big' | 'spread' | 'extraLife' | 'forceField';
 
 export type PowerupConfig = {
   type: PowerupTypeId;
@@ -32,6 +32,8 @@ export type LevelConfig = {
   powerups?: PowerupConfig;
   /** Chance to spawn one extra-life powerup (only on even levels when levelNumber % 2 === 0). 0–1. */
   extraLifeChance?: number;
+  /** Chance to spawn one force-field powerup (only on odd levels when levelNumber % 2 === 1). 0–1. */
+  forceFieldChance?: number;
 };
 
 export const LEVEL_1: LevelConfig = {
