@@ -26,6 +26,7 @@ import { PowerupSprite } from './sprites/PowerupSprite';
 import { Powerup2Sprite } from './sprites/Powerup2Sprite';
 import { Powerup3Sprite } from './sprites/Powerup3Sprite';
 import { ExtraLifeSprite } from './sprites/ExtraLifeSprite';
+import { ForceFieldPowerupSprite } from './sprites/ForceFieldPowerupSprite';
 import { GunSprite } from './sprites/GunSprite';
 import {
   GUN_SIZE,
@@ -34,6 +35,7 @@ import {
   BRICK_H,
   INITIAL_LIVES,
   PALETTE,
+  FORCE_FIELD_RADIUS,
 } from '../lib/gameConstants';
 import type { LevelConfig } from '../config/levels/level1';
 
@@ -104,9 +106,12 @@ export function GameScreen({
     obstaclePositions,
     score,
     lives,
+    forceFieldUntil,
     handleTap,
     setGameAreaLayout,
   } = gameLoop;
+
+  const forceFieldActive = gun != null && forceFieldUntil > 0 && Date.now() < forceFieldUntil;
 
   const handleEndGame = useCallback(
     (finalScore: number) => {
@@ -223,6 +228,46 @@ export function GameScreen({
             });
           }}
         >
+          {gun && forceFieldActive && (
+            <View
+              style={[
+                styles.forceFieldOuter,
+                {
+                  left: gun.x - FORCE_FIELD_RADIUS,
+                  top: gun.y - FORCE_FIELD_RADIUS,
+                  width: FORCE_FIELD_RADIUS * 2,
+                  height: FORCE_FIELD_RADIUS * 2,
+                  borderRadius: FORCE_FIELD_RADIUS,
+                },
+              ]}
+              pointerEvents="none"
+            >
+              <View
+                style={[
+                  styles.forceFieldMid,
+                  {
+                    left: FORCE_FIELD_RADIUS * 0.2,
+                    top: FORCE_FIELD_RADIUS * 0.2,
+                    width: FORCE_FIELD_RADIUS * 1.6,
+                    height: FORCE_FIELD_RADIUS * 1.6,
+                    borderRadius: FORCE_FIELD_RADIUS * 0.8,
+                  },
+                ]}
+              />
+              <View
+                style={[
+                  styles.forceFieldInner,
+                  {
+                    left: FORCE_FIELD_RADIUS * 0.45,
+                    top: FORCE_FIELD_RADIUS * 0.45,
+                    width: FORCE_FIELD_RADIUS * 1.1,
+                    height: FORCE_FIELD_RADIUS * 1.1,
+                    borderRadius: FORCE_FIELD_RADIUS * 0.55,
+                  },
+                ]}
+              />
+            </View>
+          )}
           {gun && (
             <View
               style={[
@@ -255,6 +300,8 @@ export function GameScreen({
               <Powerup3Sprite key={p.id} x={p.x} y={p.y} />
             ) : p.typeId === 'extraLife' ? (
               <ExtraLifeSprite key={p.id} x={p.x} y={p.y} />
+            ) : p.typeId === 'forceField' ? (
+              <ForceFieldPowerupSprite key={p.id} x={p.x} y={p.y} />
             ) : (
               <PowerupSprite key={p.id} x={p.x} y={p.y} />
             )
@@ -364,6 +411,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: BRICK_W,
     top: BRICK_H,
+  },
+  forceFieldOuter: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: 'rgba(0, 255, 255, 0.5)',
+    backgroundColor: 'transparent',
+  },
+  forceFieldMid: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 255, 255, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 200, 255, 0.25)',
+  },
+  forceFieldInner: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 255, 255, 0.2)',
   },
   gun: {
     position: 'absolute',

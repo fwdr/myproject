@@ -507,6 +507,8 @@ export function useGameLoop(
             if (newLives <= 0) onGameOver();
             setGun(null);
             gunRef.current = null;
+            setForceFieldUntil(0);
+            forceFieldUntilRef.current = 0;
             if (newLives > 0) {
               gunRespawnAtRef.current = Date.now() + 500;
             }
