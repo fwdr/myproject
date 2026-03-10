@@ -2,16 +2,16 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
 const PALETTE = {
-  cyan: '#00FFFF',
-  blue: '#0080FF',
-  white: '#FFFFFF',
-  dark: '#004466',
+  silver: '#C0C0C0',
+  white: '#E8E8E8',
+  blue: '#00BFFF',
+  dark: '#4682B4',
 };
 
 const SIZE = 24;
 
 /**
- * Force-field powerup: shield/bubble icon.
+ * Force-field powerup: dome/bubble icon (silver + steel blue, distinct from other powerups).
  */
 export function ForceFieldPowerupSprite({ x, y }: { x: number; y: number }) {
   return (
@@ -25,9 +25,8 @@ export function ForceFieldPowerupSprite({ x, y }: { x: number; y: number }) {
       ]}
       pointerEvents="none"
     >
-      <View style={styles.outer} />
-      <View style={styles.mid} />
-      <View style={styles.inner} />
+      <View style={styles.dome} />
+      <View style={styles.arc} />
     </View>
   );
 }
@@ -40,29 +39,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  outer: {
-    position: 'absolute',
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: PALETTE.cyan,
-    backgroundColor: 'transparent',
-  },
-  mid: {
-    position: 'absolute',
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1,
+  dome: {
+    width: 20,
+    height: 12,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    backgroundColor: PALETTE.silver,
+    borderWidth: 1.5,
     borderColor: PALETTE.blue,
-    backgroundColor: 'rgba(0, 255, 255, 0.15)',
+    borderBottomWidth: 0,
   },
-  inner: {
+  arc: {
     position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(0, 255, 255, 0.25)',
+    bottom: 4,
+    width: 14,
+    height: 2,
+    borderRadius: 1,
+    backgroundColor: PALETTE.blue,
   },
 });
