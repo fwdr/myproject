@@ -2,7 +2,7 @@ import type { LevelConfig } from './level1';
 
 export const LEVEL_9: LevelConfig = {
   id: 'level9',
-  forceFieldChance: 0.01,
+  forceFieldChance: 0.03,
   tunnel: 'horizontal',
   spawnOrigin: 'grouped',
   waves: [

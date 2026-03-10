@@ -2,7 +2,7 @@ import type { LevelConfig } from './level1';
 
 export const LEVEL_3: LevelConfig = {
   id: 'level3',
-  forceFieldChance: 0.01,
+  forceFieldChance: 0.03,
   tunnel: 'horizontal',
   powerups: {
     type: 'dual',

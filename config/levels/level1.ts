@@ -38,7 +38,7 @@ export type LevelConfig = {
 
 export const LEVEL_1: LevelConfig = {
   id: 'level1',
-  forceFieldChance: 0.01,
+  forceFieldChance: 0.03,
   tunnel: 'none',
   waveTimeoutMs: 7000,
   waves: [
