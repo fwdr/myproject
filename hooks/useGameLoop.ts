@@ -30,7 +30,7 @@ type GameLoopCallbacks = {
 
 const EXTRA_LIFE_SPAWN_AFTER_MS = 2000;
 const EXTRA_LIFE_DURATION_MS = 6000;
-const FORCE_FIELD_REEVAL_INTERVAL_MS = 10_000;
+const FORCE_FIELD_REEVAL_INTERVAL_MS = 3_000;
 const FORCE_FIELD_DURATION_MS = 10_000;
 
 export function useGameLoop(
