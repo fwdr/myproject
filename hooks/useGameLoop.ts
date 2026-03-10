@@ -30,7 +30,7 @@ type GameLoopCallbacks = {
 
 const EXTRA_LIFE_SPAWN_AFTER_MS = 2000;
 const EXTRA_LIFE_DURATION_MS = 6000;
-const FORCE_FIELD_SPAWN_AFTER_MS = 2000;
+const FORCE_FIELD_REEVAL_INTERVAL_MS = 10_000;
 const FORCE_FIELD_DURATION_MS = 10_000;
 
 export function useGameLoop(
@@ -302,11 +302,7 @@ export function useGameLoop(
     return () => clearTimeout(t);
   }, [gameActive, levelComplete, levelNumber, config.extraLifeChance, innerWidth, innerHeight]);
 
-  const forceFieldSpawnedRef = useRef(false);
-  useEffect(() => {
-    forceFieldSpawnedRef.current = false;
-  }, [levelNumber]);
-
+  // Force field: re-evaluate every 10s — roll for a new spawn on odd levels.
   useEffect(() => {
     if (!gameActive || levelComplete) return;
     const chance = config.forceFieldChance ?? 0;
@@ -315,18 +311,21 @@ export function useGameLoop(
     const h = innerHeight;
     if (w <= 0 || h <= 0) return;
     const margin = 40;
-    const t = setTimeout(() => {
-      if (forceFieldSpawnedRef.current) return;
+    const run = () => {
       if (Math.random() >= chance) return;
-      forceFieldSpawnedRef.current = true;
       const x = margin + Math.random() * (w - margin * 2);
       const y = margin + Math.random() * (h - margin * 2);
       setPowerups((prev) => [
         ...prev,
         { id: ++powerupIdRef.current, x, y, typeId: 'forceField' },
       ]);
-    }, FORCE_FIELD_SPAWN_AFTER_MS);
-    return () => clearTimeout(t);
+    };
+    const t1 = setTimeout(run, FORCE_FIELD_REEVAL_INTERVAL_MS);
+    const interval = setInterval(run, FORCE_FIELD_REEVAL_INTERVAL_MS);
+    return () => {
+      clearTimeout(t1);
+      clearInterval(interval);
+    };
   }, [gameActive, levelComplete, levelNumber, config.forceFieldChance, innerWidth, innerHeight]);
 
   // Game tick
